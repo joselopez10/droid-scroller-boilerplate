@@ -1,0 +1,437 @@
+version: 1
+document:
+  id: android-spatial-scroller-boilerplate-v1
+  title: Android Spatial Scroller Boilerplate
+  purpose: >
+    Provide a small, local-first Android foundation for a spatial card
+    scroller while keeping the normal development loop command-line-first,
+    test-driven, and suitable for autonomous implementation in increments.
+  scope: boilerplate-foundation
+  target_path: /home/jolopez/work/droid-scroller-boilerplate
+  source_inputs:
+    - docs/archive/interest-space-concept-user-stories.md
+    - docs/archive/studio-session-user-stories.md
+    - docs/archive/android-cli-tdd-user-stories.yaml
+    - docs/archive/helloworld-format-example--user-stories.md
+
+principles:
+  - Local-first core behavior does not require an account or cloud service.
+  - Product behavior is expressed as small, independently verifiable increments.
+  - Domain and application logic should be testable on the JVM whenever possible.
+  - The terminal, Gradle, Git, and tests form the normal development loop.
+  - Android runtime and physical-device checks validate Android-specific behavior
+    without blocking the inner TDD loop.
+  - Spatial effects should support comprehension and interaction rather than
+    become prerequisites for the first functional slice.
+
+interaction_model:
+  horizontal_axis:
+    purpose: switch_between_interests
+    behavior:
+      - Swiping horizontally changes the active interest.
+      - The active interest is clearly identifiable.
+  vertical_axis:
+    purpose: navigate_cards_within_an_interest
+    modes:
+      finite:
+        behavior:
+          - Moving forward stops at the last card.
+          - Moving backward stops at the first card.
+          - A card can be inserted at either end so the sequence can grow.
+      loop:
+        behavior:
+          - Moving forward from the last card reaches the first card.
+          - Moving backward from the first card reaches the last card.
+    selection: configurable
+  hold_actions:
+    gesture: press_and_hold
+    initial_threshold_ms: 1500
+    behavior:
+      - Holding a focused card opens an action surface.
+      - The action surface offers insert and delete actions.
+      - Deleting requires an explicit confirmation or reversible undo.
+      - Releasing before the threshold does not open the action surface.
+
+user_stories:
+  - id: US-001
+    title: Bootstrap the Android project from the command line
+    category: developer
+    priority: P0
+    status: ready
+    story:
+      as_a: developer
+      i_want: to create and configure the Android project from the command line
+      so_that: Android Studio is not required to begin the normal development loop
+    acceptance_criteria:
+      - The project has a valid Gradle configuration.
+      - The required JDK and Android SDK configuration can be checked from the terminal.
+      - The project can be opened later in Android Studio without restructuring.
+    increments:
+      - Define the minimal Android project structure.
+      - Add or verify the Gradle wrapper and debug build configuration.
+      - Document the required command-line prerequisites.
+    verification:
+      automated:
+        - ./gradlew tasks
+        - ./gradlew assembleDebug
+      device: []
+
+  - id: US-002
+    title: Display a minimal spatial scroller
+    category: product
+    priority: P0
+    status: ready
+    story:
+      as_a: user
+      i_want: to see a focused card with neighboring cards partially visible
+      so_that: I can understand the current position in a spatial sequence
+    acceptance_criteria:
+      - A focused card is rendered.
+      - At least one neighboring card can be partially visible when available.
+      - The focused card is visually more prominent than its neighbors.
+      - Transitioning between cards preserves a single focused position.
+    increments:
+      - Model a sequence of cards and a focused index.
+      - Render the focused card and neighboring cards.
+      - Add a deterministic transition between adjacent cards.
+    verification:
+      automated:
+        - JVM tests cover focused-index and neighbor-selection behavior.
+        - A UI test or screenshot check covers the initial focused state.
+      device:
+        - Confirm the focused card and neighboring peek are legible on a physical device.
+
+  - id: US-003
+    title: Navigate between interests horizontally
+    category: product
+    priority: P0
+    status: ready
+    story:
+      as_a: user
+      i_want: to swipe horizontally between interests
+      so_that: I can move through separate personal spaces
+    acceptance_criteria:
+      - Horizontal navigation changes the active interest.
+      - The active interest is clearly identifiable.
+      - Navigation behaves correctly with one, two, and many interests.
+      - Horizontal navigation does not unexpectedly change the focused card within an interest.
+    increments:
+      - Define interest and active-interest state.
+      - Test single-interest and boundary behavior.
+      - Connect horizontal gesture state to the active-interest state.
+    verification:
+      automated:
+        - JVM tests cover active-interest transitions and boundaries.
+        - UI tests cover horizontal navigation state.
+      device:
+        - Confirm horizontal navigation is distinguishable from vertical navigation.
+
+  - id: US-004
+    title: Navigate cards with finite vertical scrolling
+    category: product
+    priority: P0
+    status: ready
+    story:
+      as_a: user
+      i_want: vertical navigation to stop at the ends in finite mode
+      so_that: I know when I have reached the beginning or end of an interest
+    acceptance_criteria:
+      - Moving forward stops at the final card.
+      - Moving backward stops at the first card.
+      - Boundary attempts do not produce an invalid index or blank focused state.
+      - The current position remains understandable.
+    increments:
+      - Define finite navigation state and bounds.
+      - Test forward and backward boundary behavior.
+      - Expose the selected navigation mode to the presentation layer.
+    verification:
+      automated:
+        - JVM tests cover empty, single-card, and multi-card sequences.
+        - JVM tests cover both boundaries and repeated boundary attempts.
+      device:
+        - Confirm end-of-sequence behavior is understandable during vertical swipes.
+
+  - id: US-005
+    title: Navigate cards with looping vertical scrolling
+    category: product
+    priority: P0
+    status: ready
+    story:
+      as_a: user
+      i_want: vertical navigation to loop in loop mode
+      so_that: I can continuously browse an interest without a hard stop
+    acceptance_criteria:
+      - Moving forward from the final card selects the first card.
+      - Moving backward from the first card selects the final card.
+      - Looping does not duplicate or delete cards.
+      - Switching modes preserves valid content and focused state.
+    increments:
+      - Define modular index transitions.
+      - Test both wraparound directions.
+      - Test switching between finite and loop modes.
+    verification:
+      automated:
+        - JVM tests cover wraparound and mode changes.
+      device:
+        - Confirm loop transitions feel continuous and do not expose a visual glitch.
+
+  - id: US-006
+    title: Insert a card at either end of an interest
+    category: product
+    priority: P0
+    status: ready
+    story:
+      as_a: user
+      i_want: to add a card before or after the current sequence
+      so_that: an interest can grow while finite navigation remains useful
+    acceptance_criteria:
+      - A new card can be inserted at the beginning.
+      - A new card can be inserted at the end.
+      - Existing cards retain their order and content.
+      - The focused position after insertion is deterministic.
+    increments:
+      - Define card identity and insertion operations.
+      - Test insertion at both ends and around an empty sequence.
+      - Connect insertion to the hold-action surface.
+    verification:
+      automated:
+        - JVM tests cover ordering, identity, and focused-position rules.
+      device:
+        - Confirm insertion is reachable and understandable from the card action surface.
+
+  - id: US-007
+    title: Delete a focused card safely
+    category: product
+    priority: P0
+    status: ready
+    story:
+      as_a: user
+      i_want: to delete the focused card through an explicit action
+      so_that: I can curate an interest without accidental data loss
+    acceptance_criteria:
+      - Pressing and holding a focused card opens card actions after the configured threshold.
+      - Releasing before the threshold does not open card actions.
+      - Delete requires confirmation or provides an immediate undo.
+      - Deleting the only card leaves a valid empty state.
+      - Deleting a card selects a deterministic neighboring focus.
+    increments:
+      - Model press duration and cancellation.
+      - Add the action surface with insert and delete choices.
+      - Test delete confirmation/undo and empty-state behavior.
+    verification:
+      automated:
+        - JVM tests cover hold threshold and cancellation.
+        - JVM tests cover delete behavior for first, middle, last, and only cards.
+      device:
+        - Confirm the hold gesture is discoverable and does not trigger accidentally.
+
+  - id: US-008
+    title: Persist interests and cards locally
+    category: product
+    priority: P0
+    status: ready
+    story:
+      as_a: user
+      i_want: my interests and cards to survive app restarts
+      so_that: the boilerplate is useful without an account or cloud service
+    acceptance_criteria:
+      - Data survives process and app restarts.
+      - Core browsing and editing work without an account.
+      - User content is not sent to a remote service by default.
+      - Persistence failures are surfaced rather than silently ignored.
+    increments:
+      - Define serializable local data models.
+      - Add a local persistence boundary behind an interface.
+      - Test save/load and empty-state behavior on the JVM.
+      - Connect persistence to the Android lifecycle.
+    verification:
+      automated:
+        - JVM tests cover round-trip persistence and malformed/empty data handling.
+        - Android tests cover persistence across recreation where practical.
+      device:
+        - Confirm data remains after force-close and relaunch.
+
+  - id: US-009
+    title: Apply responsive spatial presentation
+    category: product
+    priority: P1
+    status: ready
+    story:
+      as_a: user
+      i_want: card spacing and transformations to adapt to screen size
+      so_that: the scroller remains usable on phones and tablets
+    acceptance_criteria:
+      - Layout calculations use available size rather than fixed device dimensions.
+      - Neighboring cards remain visible when the layout has room for them.
+      - Focused content remains readable at supported sizes.
+      - Transform calculations are deterministic for a given layout and position.
+    increments:
+      - Extract size-dependent layout calculations from UI code.
+      - Test representative small and large dimensions.
+      - Add the first spatial transform, such as scale or Y-axis rotation.
+    verification:
+      automated:
+        - JVM tests cover layout calculations at representative dimensions.
+        - UI tests cover configuration or size changes where supported.
+      device:
+        - Check a small phone and a larger screen during milestone validation.
+
+  - id: US-010
+    title: Implement each increment with TDD
+    category: developer
+    priority: P0
+    status: ready
+    story:
+      as_a: developer
+      i_want: each user-story increment to follow red-green-refactor
+      so_that: behavior is developed in small, reviewable steps
+    acceptance_criteria:
+      - A failing test or reproducible check exists before the implementation change.
+      - The smallest implementation needed to pass is introduced.
+      - Relevant tests are rerun after implementation.
+      - Refactoring preserves green tests.
+      - Each meaningful increment can be reviewed and committed independently.
+    increments:
+      - Select one acceptance criterion.
+      - Add the smallest failing test.
+      - Implement the minimum behavior.
+      - Refactor only after the test is green.
+      - Record automated and device verification separately.
+    verification:
+      automated:
+        - ./gradlew test
+      device: []
+
+  - id: US-011
+    title: Keep application logic JVM-testable
+    category: developer
+    priority: P0
+    status: ready
+    story:
+      as_a: developer
+      i_want: navigation and card rules to run without the Android runtime
+      so_that: the inner TDD loop remains fast and deterministic
+    acceptance_criteria:
+      - Navigation, insertion, deletion, and mode rules can be tested on the JVM.
+      - Business rules do not unnecessarily depend on Android framework APIs.
+      - Android-specific code is isolated behind clear boundaries.
+      - Fakes or test doubles can exercise persistence and time-dependent behavior.
+    increments:
+      - Separate domain state transitions from UI gesture handling.
+      - Define interfaces for persistence and platform-dependent effects.
+      - Add JVM tests for each state transition.
+    verification:
+      automated:
+        - ./gradlew test
+      device: []
+
+  - id: US-012
+    title: Verify the project from one command
+    category: developer
+    priority: P0
+    status: ready
+    story:
+      as_a: developer
+      i_want: one command to run the project's automated checks
+      so_that: I can decide whether an increment is ready to review
+    acceptance_criteria:
+      - The command runs unit tests.
+      - The command runs linting when configured.
+      - The command builds the debug application.
+      - The command returns a non-zero exit code on failure.
+      - The command prints enough context to identify the failed stage.
+    increments:
+      - Define the verification command using existing Gradle tasks.
+      - Add or document the command as part of the project workflow.
+      - Exercise both success and failure paths.
+    verification:
+      automated:
+        - ./gradlew test
+        - ./gradlew lint
+        - ./gradlew assembleDebug
+      device: []
+
+  - id: US-013
+    title: Validate milestones on a physical Android device
+    category: developer
+    priority: P1
+    status: ready
+    story:
+      as_a: developer
+      i_want: to validate accumulated increments on a physical device
+      so_that: runtime, gesture, visual, and performance issues are not hidden by JVM tests
+    acceptance_criteria:
+      - A debug APK can be built and installed using ADB.
+      - Important user interactions can be exercised manually.
+      - Android-specific issues are recorded as new increments or resolved before completion.
+      - Device validation does not block the normal JVM TDD loop.
+    increments:
+      - Document device detection, install, launch, and log commands.
+      - Define milestone flows for horizontal and vertical navigation.
+      - Record visual or gesture defects as follow-up story increments.
+    verification:
+      automated:
+        - ./gradlew assembleDebug
+      device:
+        - adb devices
+        - adb install <apk>
+        - adb shell am start <activity>
+        - adb logcat
+
+  - id: US-014
+    title: Provide a development-only state harness
+    category: developer
+    priority: P1
+    status: ready
+    story:
+      as_a: developer
+      i_want: to generate, reset, and inspect unusual card states in development
+      so_that: navigation and persistence edge cases are quick to reproduce
+    acceptance_criteria:
+      - The harness is unavailable in production builds.
+      - It can generate interests and cards of varied sizes.
+      - It can reset generated data.
+      - It can jump to a selected interest, card, and navigation mode.
+      - It can disable or accelerate animations for debugging.
+    increments:
+      - Define a development-only interface for state generation.
+      - Add deterministic fixtures for empty, boundary, and large datasets.
+      - Keep generated data isolated from normal user data.
+    verification:
+      automated:
+        - JVM tests cover generated fixture shapes and reset behavior.
+      device:
+        - Confirm the harness is absent from the production build variant.
+
+definition_of_done:
+  story:
+    - Acceptance criteria are satisfied.
+    - Relevant behavior has automated tests.
+    - The smallest useful increment is independently reviewable.
+  automated:
+    - Relevant JVM and Android tests pass.
+    - Configured lint checks pass.
+    - The debug build succeeds.
+  device:
+    - Required Android-specific behavior has been exercised on a physical device.
+    - Visual or gesture issues are resolved or explicitly tracked.
+  delivery:
+    - The diff is reviewed.
+    - The story status is updated.
+    - The increment is committed only after verification.
+
+deferred_scope:
+  - id: cloud-sync
+    reason: Keep the first foundation local-first and account-free.
+  - id: external-integrations
+    reason: Avoid coupling the core model to external services.
+  - id: alternate-layouts
+    reason: Establish one spatial presentation before adding presentation modes.
+  - id: anonymous-telemetry
+    reason: Do not add data collection before the local interaction model is stable.
+  - id: advanced-physics-controls
+    reason: Defer a user-facing linear/circular physics toggle until baseline navigation is reliable.
+  - id: rich-media-items
+    reason: Start with a minimal card model; add media after persistence and navigation are stable.
+  - id: android-project-scaffolding
+    reason: This increment produces documentation only; project files are a subsequent story.
