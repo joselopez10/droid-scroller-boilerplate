@@ -57,7 +57,7 @@ user_stories:
     title: Bootstrap the Android project from the command line
     category: developer
     priority: P0
-    status: ready
+    status: completed
     story:
       as_a: developer
       i_want: to create and configure the Android project from the command line
