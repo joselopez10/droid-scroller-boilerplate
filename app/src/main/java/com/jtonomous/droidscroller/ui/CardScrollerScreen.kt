@@ -8,7 +8,10 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateOf
@@ -38,6 +41,8 @@ fun CardScrollerScreen(
         animationSpec = tween(durationMillis = 300),
         label = "CardScrollOffset"
     )
+    val showAddCardDialog = remember { mutableStateOf(false) }
+    val newCardTitle = remember { mutableStateOf("") }
 
     if (navigationSettings.isSettingsOpen) {
         NavigationSettingsScreen(
@@ -87,6 +92,16 @@ fun CardScrollerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
+            Button(
+                onClick = {
+                    newCardTitle.value = ""
+                    showAddCardDialog.value = true
+                },
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("+")
+            }
+
             if (navigationSettings.showNavigationButtons) {
                 Button(
                     onClick = { viewModel?.moveBackward() },
@@ -198,6 +213,36 @@ fun CardScrollerScreen(
             }
         }
 
+        if (showAddCardDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showAddCardDialog.value = false },
+                title = { Text("Add card") },
+                text = {
+                    TextField(
+                        value = newCardTitle.value,
+                        onValueChange = { newCardTitle.value = it },
+                        label = { Text("Card name") },
+                        singleLine = true
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel?.addCard(newCardTitle.value)
+                            showAddCardDialog.value = false
+                        },
+                        enabled = newCardTitle.value.isNotBlank()
+                    ) {
+                        Text("OK")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showAddCardDialog.value = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
     }
 }
 

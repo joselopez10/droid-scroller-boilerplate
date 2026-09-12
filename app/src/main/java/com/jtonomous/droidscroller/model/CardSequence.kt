@@ -20,6 +20,13 @@ data class CardSequence(
             return if (afterIndex in cards.indices) cards[afterIndex] else null
         }
 
+    fun insertAtTop(card: Card): CardSequence {
+        return copy(
+            cards = listOf(card) + cards,
+            focusedIndex = 0
+        )
+    }
+
     fun moveForward(): CardSequence {
         if (cards.isEmpty()) {
             return copy(focusedIndex = 0)

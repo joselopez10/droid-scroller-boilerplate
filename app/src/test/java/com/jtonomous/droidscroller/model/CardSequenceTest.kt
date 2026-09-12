@@ -187,4 +187,28 @@ class CardSequenceTest {
         val moved = sequence.moveForward()
         assertEquals(cards, moved.cards)
     }
+
+    @Test
+    fun insertAtTopPlacesCardFirstAndFocusesIt() {
+        val sequence = CardSequence(
+            cards = listOf(Card("1", "Existing")),
+            focusedIndex = 0
+        )
+
+        val inserted = sequence.insertAtTop(Card("new", "New card"))
+
+        assertEquals(listOf("new", "1"), inserted.cards.map { it.id })
+        assertEquals(0, inserted.focusedIndex)
+        assertEquals("New card", inserted.focusedCard?.title)
+    }
+
+    @Test
+    fun insertAtTopWorksForEmptySequence() {
+        val inserted = CardSequence(emptyList(), 0)
+            .insertAtTop(Card("new", "New card"))
+
+        assertEquals(1, inserted.cards.size)
+        assertEquals(0, inserted.focusedIndex)
+        assertEquals("new", inserted.focusedCard?.id)
+    }
 }

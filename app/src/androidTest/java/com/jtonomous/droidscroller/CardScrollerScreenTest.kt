@@ -6,6 +6,7 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import org.junit.Rule
 import org.junit.Test
 
@@ -46,5 +47,16 @@ class CardScrollerScreenTest {
 
         composeRule.onNodeWithText("Previous card").performClick()
         composeRule.onNodeWithText("Card 2 of 3 · Finite").assertIsDisplayed()
+    }
+
+    @Test
+    fun addCardDialogInsertsNewCardAtTopAndFocusesIt() {
+        composeRule.onNodeWithText("+").performClick()
+        composeRule.onNodeWithText("Add card").assertIsDisplayed()
+        composeRule.onNodeWithText("Card name").performTextInput("New favorite")
+        composeRule.onNodeWithText("OK").performClick()
+
+        composeRule.onNodeWithText("New favorite").assertIsDisplayed()
+        composeRule.onNodeWithText("Card 1 of 4 · Finite").assertIsDisplayed()
     }
 }

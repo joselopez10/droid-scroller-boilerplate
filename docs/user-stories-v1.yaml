@@ -345,28 +345,32 @@ user_stories:
         - Confirm loop transitions feel continuous and do not expose a visual glitch.
 
   - id: US-006
-    title: Insert a card at either end of an interest
+    title: Add a card to the top of an interest
     category: product
     priority: P0
-    status: ready
+    status: completed
     story:
       as_a: user
-      i_want: to add a card before or after the current sequence
+      i_want: to add a named card to the top of the current stack
       so_that: an interest can grow while finite navigation remains useful
     acceptance_criteria:
-      - A new card can be inserted at the beginning.
-      - A new card can be inserted at the end.
+      - A fixed plus (+) control is available at the top of the main view.
+      - Pressing the plus control opens a compact add-card dialog.
+      - The dialog accepts a card name and provides Cancel and OK actions.
+      - Confirming a non-blank name inserts the new card at the top of the active interest's card stack.
+      - After insertion, the new card is focused in the main view.
+      - Canceling or dismissing the dialog does not change the card sequence.
       - Existing cards retain their order and content.
-      - The focused position after insertion is deterministic.
     increments:
       - Define card identity and insertion operations.
-      - Test insertion at both ends and around an empty sequence.
-      - Connect insertion to the hold-action surface.
+      - Test top insertion and focus behavior, including an empty sequence.
+      - Connect the fixed plus control to a compact add-card dialog.
+      - Validate the dialog's cancel, confirmation, and blank-name behavior.
     verification:
       automated:
         - JVM tests cover ordering, identity, and focused-position rules.
       device:
-        - Confirm insertion is reachable and understandable from the card action surface.
+        - Confirm the plus control, dialog, and top-stack insertion are understandable on device.
 
   - id: US-007
     title: Delete a focused card safely
