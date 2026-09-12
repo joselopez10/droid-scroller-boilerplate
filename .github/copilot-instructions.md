@@ -105,6 +105,9 @@ The current app is only a launchable Compose shell. Subsequent stories should in
 - Do not copy `local.properties` or machine-specific configuration from reference projects.
 - Use the Android Studio and reference projects under the local workspace only as technical references; adapt code and dependencies to this repository rather than coupling the project to those locations.
 - Record physical-device findings as follow-up increments or story changes instead of silently working around them.
+- Connected instrumentation tests may uninstall the debug application after completion. If the user wants the APK left on a physical device, reinstall and launch the verified debug APK as the final device step; do not interpret the test cleanup as an app crash.
+- For persistence work, verify both user content and browsing state (active interest and focused card) across force-stop and relaunch, and surface persistence errors instead of silently falling back.
+- Keep spatial presentation rules deterministic and JVM-testable: focused, first-neighbor, and second-neighbor scale/alpha should be derived from relative position and available layout size.
 
 ## Scope boundaries
 

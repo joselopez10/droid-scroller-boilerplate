@@ -20,9 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import com.jtonomous.droidscroller.model.Card as CardModel
 import com.jtonomous.droidscroller.model.CardSequence
+import com.jtonomous.droidscroller.model.cardPresentationFor
 import com.jtonomous.droidscroller.model.InterestSequence
 import com.jtonomous.droidscroller.model.NavigationMode
 import com.jtonomous.droidscroller.model.NavigationSettings
@@ -32,6 +34,7 @@ import com.jtonomous.droidscroller.viewmodel.CardScrollerViewModel
 fun CardScrollerScreen(
     interestSequence: InterestSequence,
     navigationSettings: NavigationSettings,
+    persistenceError: String? = null,
     modifier: Modifier = Modifier,
     viewModel: CardScrollerViewModel? = null
 ) {
@@ -49,6 +52,7 @@ fun CardScrollerScreen(
             navigationSettings = navigationSettings,
             onToggleNavigationButtons = { viewModel?.toggleNavigationButtons() },
             onClose = { viewModel?.closeSettings() },
+            persistenceError = persistenceError,
             modifier = modifier
         )
         return
@@ -92,6 +96,14 @@ fun CardScrollerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
+            persistenceError?.let { error ->
+                Text(
+                    text = "Persistence error: $error",
+                    color = MaterialTheme.colorScheme.error,
+                    modifier = Modifier.padding(8.dp)
+                )
+            }
+
             Button(
                 onClick = {
                     newCardTitle.value = ""
@@ -133,43 +145,23 @@ fun CardScrollerScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            // Previous card (partial)
-            interestSequence.activeInterest?.cards?.neighborBefore?.let { card ->
-                CardItem(
-                    card = card,
-                    isFocused = false,
-                    alpha = 0.5f,
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(120.dp)
-                        .padding(bottom = 8.dp)
-                )
-            }
-
-            // Focused card
-            interestSequence.activeInterest?.cards?.focusedCard?.let { card ->
-                CardItem(
-                    card = card,
-                    isFocused = true,
-                    alpha = 1f,
-                    modifier = Modifier
-                        .fillMaxWidth(0.95f)
-                        .height(200.dp)
-                        .padding(vertical = 8.dp)
-                )
-            }
-
-            // Next card (partial)
-            interestSequence.activeInterest?.cards?.neighborAfter?.let { card ->
-                CardItem(
-                    card = card,
-                    isFocused = false,
-                    alpha = 0.5f,
-                    modifier = Modifier
-                        .fillMaxWidth(0.85f)
-                        .height(120.dp)
-                        .padding(top = 8.dp)
-                )
+            interestSequence.activeInterest?.cards?.let { sequence ->
+                val firstVisibleIndex = (sequence.focusedIndex - 2).coerceAtLeast(0)
+                val lastVisibleIndex = (sequence.focusedIndex + 2).coerceAtMost(sequence.cards.lastIndex)
+                for (index in firstVisibleIndex..lastVisibleIndex) {
+                    val relativePosition = index - sequence.focusedIndex
+                    val presentation = cardPresentationFor(relativePosition)
+                    CardItem(
+                        card = sequence.cards[index],
+                        isFocused = relativePosition == 0,
+                        alpha = presentation.alpha,
+                        modifier = Modifier
+                            .fillMaxWidth(if (relativePosition == 0) 0.95f else 0.85f)
+                            .height(if (relativePosition == 0) 200.dp else if (kotlin.math.abs(relativePosition) == 1) 120.dp else 90.dp)
+                            .scale(presentation.scale)
+                            .padding(vertical = 4.dp)
+                    )
+                }
             }
 
             Spacer(
@@ -251,6 +243,7 @@ private fun NavigationSettingsScreen(
     navigationSettings: NavigationSettings,
     onToggleNavigationButtons: () -> Unit,
     onClose: () -> Unit,
+    persistenceError: String?,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -265,6 +258,13 @@ private fun NavigationSettingsScreen(
             style = MaterialTheme.typography.headlineMedium,
             modifier = Modifier.padding(bottom = 24.dp)
         )
+        persistenceError?.let { error ->
+            Text(
+                text = "Persistence error: $error",
+                color = MaterialTheme.colorScheme.error,
+                modifier = Modifier.padding(bottom = 16.dp)
+            )
+        }
         Row(
             modifier = Modifier.fillMaxWidth(),
             verticalAlignment = Alignment.CenterVertically,

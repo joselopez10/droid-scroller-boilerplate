@@ -402,13 +402,14 @@ user_stories:
     title: Persist interests and cards locally
     category: product
     priority: P0
-    status: ready
+    status: in_progress
     story:
       as_a: user
       i_want: my interests and cards to survive app restarts
       so_that: the boilerplate is useful without an account or cloud service
     acceptance_criteria:
       - Data survives process and app restarts.
+      - The active interest and focused card are restored after relaunch.
       - Core browsing and editing work without an account.
       - User content is not sent to a remote service by default.
       - Persistence failures are surfaced rather than silently ignored.
@@ -419,7 +420,8 @@ user_stories:
       - Connect persistence to the Android lifecycle.
     verification:
       automated:
-        - JVM tests cover round-trip persistence and malformed/empty data handling.
+        - JVM tests cover round-trip persistence of interests, cards, active interest, and focused card.
+        - JVM tests cover malformed/empty data handling.
         - Android tests cover persistence across recreation where practical.
       device:
         - Confirm data remains after force-close and relaunch.
@@ -459,23 +461,26 @@ user_stories:
     title: Apply responsive spatial presentation
     category: product
     priority: P1
-    status: ready
+    status: in_progress
     story:
       as_a: user
       i_want: card spacing and transformations to adapt to screen size
       so_that: the scroller remains usable on phones and tablets
     acceptance_criteria:
       - Layout calculations use available size rather than fixed device dimensions.
-      - Neighboring cards remain visible when the layout has room for them.
+      - When available, up to two neighboring cards are visible above and below the focused card.
+      - The focused card uses the largest scale and strongest opacity.
+      - The first neighbors use the current secondary scale and opacity.
+      - The second neighbors use a smaller scale and lower opacity than the first neighbors.
       - Focused content remains readable at supported sizes.
-      - Transform calculations are deterministic for a given layout and position.
+      - Transform calculations are deterministic for a given layout and relative position.
     increments:
       - Extract size-dependent layout calculations from UI code.
       - Test representative small and large dimensions.
-      - Add the first spatial transform, such as scale or Y-axis rotation.
+      - Add deterministic scale and alpha transforms for focused, first-neighbor, and second-neighbor positions.
     verification:
       automated:
-        - JVM tests cover layout calculations at representative dimensions.
+        - JVM tests cover layout calculations at representative dimensions and five-card stacks.
         - UI tests cover configuration or size changes where supported.
       device:
         - Check a small phone and a larger screen during milestone validation.

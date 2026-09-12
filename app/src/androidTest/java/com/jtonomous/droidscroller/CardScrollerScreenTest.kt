@@ -7,12 +7,19 @@ import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
+import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
 
 class CardScrollerScreenTest {
     @get:Rule
     val composeRule = createAndroidComposeRule<MainActivity>()
+
+    @Before
+    fun resetPersistedState() {
+        composeRule.activity.resetPersistedStateForTesting()
+        composeRule.waitForIdle()
+    }
 
     @Test
     fun navigationButtonsAreHiddenByDefault() {
@@ -59,4 +66,5 @@ class CardScrollerScreenTest {
         composeRule.onNodeWithText("New favorite").assertIsDisplayed()
         composeRule.onNodeWithText("Card 1 of 4 · Finite").assertIsDisplayed()
     }
+
 }
