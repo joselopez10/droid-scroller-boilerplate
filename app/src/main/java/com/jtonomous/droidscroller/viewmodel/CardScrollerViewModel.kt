@@ -6,11 +6,14 @@ import androidx.lifecycle.ViewModel
 import com.jtonomous.droidscroller.model.CardSequence
 import com.jtonomous.droidscroller.model.DefaultInterestFixture
 import com.jtonomous.droidscroller.model.InterestSequence
+import com.jtonomous.droidscroller.model.NavigationSettings
 
 class CardScrollerViewModel : ViewModel() {
     private val _interestSequence = mutableStateOf(DefaultInterestFixture.create())
+    private val _navigationSettings = mutableStateOf(NavigationSettings())
 
     val interestSequence: State<InterestSequence> = _interestSequence
+    val navigationSettings: State<NavigationSettings> = _navigationSettings
     val cardSequence: CardSequence?
         get() = _interestSequence.value.activeInterest?.cards
 
@@ -44,5 +47,17 @@ class CardScrollerViewModel : ViewModel() {
 
     fun moveToPreviousInterest() {
         _interestSequence.value = _interestSequence.value.moveBackward()
+    }
+
+    fun openSettings() {
+        _navigationSettings.value = _navigationSettings.value.openSettings()
+    }
+
+    fun closeSettings() {
+        _navigationSettings.value = _navigationSettings.value.closeSettings()
+    }
+
+    fun toggleNavigationButtons() {
+        _navigationSettings.value = _navigationSettings.value.toggleNavigationButtons()
     }
 }

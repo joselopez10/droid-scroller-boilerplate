@@ -286,6 +286,38 @@ user_stories:
       device:
         - Confirm the refined launch state and control placement on a physical device.
 
+  - id: US-004-REFINE-B
+    title: Configure optional navigation buttons from settings
+    category: product
+    priority: P0
+    status: completed
+    story:
+      as_a: user
+      i_want: navigation buttons to be optional and configurable from settings
+      so_that: swipe navigation remains the uncluttered default while button access is available when needed
+    acceptance_criteria:
+      - Swipe navigation remains available regardless of the navigation-button setting.
+      - Card and interest navigation buttons are hidden by default.
+      - A small settings control is visible near the lower-left area of the main screen.
+      - Settings provides a `Navigation buttons` option.
+      - Enabling the option shows the card and interest navigation buttons.
+      - Disabling the option hides the card and interest navigation buttons.
+      - The settings surface provides an explicit return action to the main screen.
+      - `Next card` and `Previous card` invoke the requested vertical actions after their callbacks are corrected.
+    increments:
+      - Add testable settings state for menu visibility and navigation-button visibility.
+      - Add the settings control, menu, toggle, and return action.
+      - Hide navigation buttons by default and restore them when enabled.
+      - Correct card-button callback direction without changing swipe direction.
+      - Add Compose UI coverage for settings entry, exit, toggle behavior, and control visibility.
+    verification:
+      automated:
+        - JVM tests cover settings state transitions.
+        - Compose UI tests cover default hidden controls, settings entry/exit, and toggle behavior.
+      device:
+        - Confirm the default screen shows only the settings control.
+        - Confirm enabling navigation buttons reveals all card and interest controls.
+
   - id: US-005
     title: Navigate cards with looping vertical scrolling
     category: product
@@ -304,9 +336,11 @@ user_stories:
       - Define modular index transitions.
       - Test both wraparound directions.
       - Test switching between finite and loop modes.
+      - Treat navigation buttons as optional controls; swipe navigation remains the default interaction.
     verification:
       automated:
         - JVM tests cover wraparound and mode changes.
+        - UI tests cover loop behavior with navigation buttons hidden by default.
       device:
         - Confirm loop transitions feel continuous and do not expose a visual glitch.
 
@@ -466,6 +500,32 @@ user_stories:
         - JVM tests cover generated fixture shapes and reset behavior.
       device:
         - Confirm the harness is absent from the production build variant.
+
+  - id: US-015
+    title: Automate Compose UI interaction coverage
+    category: developer
+    priority: P1
+    status: completed
+    story:
+      as_a: developer
+      i_want: Compose UI interactions to be covered by repeatable automation
+      so_that: gesture, settings, visibility, and layout regressions are detected before device validation
+    acceptance_criteria:
+      - Compose UI tests can launch the main screen deterministically.
+      - Tests can identify the settings control, settings option, return action, and navigation controls semantically.
+      - Tests cover default hidden navigation controls.
+      - Tests cover enabling and disabling navigation controls.
+      - Tests cover the corrected card-button action mapping.
+      - Tests remain separate from physical-device milestone verification.
+    increments:
+      - Create the Android Compose test source set and test rule.
+      - Add stable semantics or test tags for settings and navigation controls.
+      - Add focused tests for settings and navigation-button visibility.
+      - Add focused tests for card-button action mapping and initial state.
+    verification:
+      automated:
+        - ./gradlew connectedDebugAndroidTest
+      device: []
 
 definition_of_done:
   story:

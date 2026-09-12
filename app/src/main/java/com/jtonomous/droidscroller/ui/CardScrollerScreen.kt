@@ -22,11 +22,13 @@ import com.jtonomous.droidscroller.model.Card as CardModel
 import com.jtonomous.droidscroller.model.CardSequence
 import com.jtonomous.droidscroller.model.InterestSequence
 import com.jtonomous.droidscroller.model.NavigationMode
+import com.jtonomous.droidscroller.model.NavigationSettings
 import com.jtonomous.droidscroller.viewmodel.CardScrollerViewModel
 
 @Composable
 fun CardScrollerScreen(
     interestSequence: InterestSequence,
+    navigationSettings: NavigationSettings,
     modifier: Modifier = Modifier,
     viewModel: CardScrollerViewModel? = null
 ) {
@@ -36,6 +38,16 @@ fun CardScrollerScreen(
         animationSpec = tween(durationMillis = 300),
         label = "CardScrollOffset"
     )
+
+    if (navigationSettings.isSettingsOpen) {
+        NavigationSettingsScreen(
+            navigationSettings = navigationSettings,
+            onToggleNavigationButtons = { viewModel?.toggleNavigationButtons() },
+            onClose = { viewModel?.closeSettings() },
+            modifier = modifier
+        )
+        return
+    }
 
     Box(
         modifier = modifier
@@ -75,11 +87,13 @@ fun CardScrollerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
-            Button(
-                onClick = { viewModel?.moveForward() },
-                modifier = Modifier.padding(top = 8.dp)
-            ) {
-                Text("Next card")
+            if (navigationSettings.showNavigationButtons) {
+                Button(
+                    onClick = { viewModel?.moveBackward() },
+                    modifier = Modifier.padding(top = 8.dp)
+                ) {
+                    Text("Next card")
+                }
             }
 
             Spacer(modifier = Modifier.height(8.dp))
@@ -149,12 +163,14 @@ fun CardScrollerScreen(
                     .offset(y = (animatedOffset.value.y / 50).dp)
             )
 
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
-            ) {
-                Button(onClick = { viewModel?.moveBackward() }) {
-                    Text("Previous card")
+            if (navigationSettings.showNavigationButtons) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.Center
+                ) {
+                    Button(onClick = { viewModel?.moveForward() }) {
+                        Text("Previous card")
+                    }
                 }
             }
 
@@ -162,16 +178,61 @@ fun CardScrollerScreen(
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(onClick = { viewModel?.moveToPreviousInterest() }) {
-                    Text("← Interest")
+                Button(onClick = { viewModel?.openSettings() }) {
+                    Text("⚙")
                 }
-                Spacer(modifier = Modifier.width(16.dp))
-                Button(onClick = { viewModel?.moveToNextInterest() }) {
-                    Text("Interest →")
+                if (navigationSettings.showNavigationButtons) {
+                    Row {
+                        Button(onClick = { viewModel?.moveToPreviousInterest() }) {
+                            Text("← Interest")
+                        }
+                        Spacer(modifier = Modifier.width(16.dp))
+                        Button(onClick = { viewModel?.moveToNextInterest() }) {
+                            Text("Interest →")
+                        }
+                    }
                 }
             }
+        }
+
+    }
+}
+
+@Composable
+private fun NavigationSettingsScreen(
+    navigationSettings: NavigationSettings,
+    onToggleNavigationButtons: () -> Unit,
+    onClose: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(24.dp),
+        verticalArrangement = Arrangement.Top,
+        horizontalAlignment = Alignment.Start
+    ) {
+        Text(
+            text = "Settings",
+            style = MaterialTheme.typography.headlineMedium,
+            modifier = Modifier.padding(bottom = 24.dp)
+        )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
+        ) {
+            Text("Navigation buttons")
+            Button(onClick = onToggleNavigationButtons) {
+                Text(if (navigationSettings.showNavigationButtons) "On" else "Off")
+            }
+        }
+        Spacer(modifier = Modifier.height(24.dp))
+        Button(onClick = onClose) {
+            Text("Back")
         }
     }
 }

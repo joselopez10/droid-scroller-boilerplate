@@ -26,6 +26,7 @@ private fun DroidScrollerApp(viewModel: CardScrollerViewModel = viewModel()) {
         Surface {
             CardScrollerScreen(
                 interestSequence = viewModel.interestSequence.value,
+                navigationSettings = viewModel.navigationSettings.value,
                 modifier = Modifier,
                 viewModel = viewModel
             )
