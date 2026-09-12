@@ -3,7 +3,7 @@ package com.jtonomous.droidscroller.ui
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.gestures.detectVerticalDragGestures
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -20,11 +20,13 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.dp
 import com.jtonomous.droidscroller.model.Card as CardModel
 import com.jtonomous.droidscroller.model.CardSequence
+import com.jtonomous.droidscroller.model.InterestSequence
+import com.jtonomous.droidscroller.model.NavigationMode
 import com.jtonomous.droidscroller.viewmodel.CardScrollerViewModel
 
 @Composable
 fun CardScrollerScreen(
-    sequence: CardSequence,
+    interestSequence: InterestSequence,
     modifier: Modifier = Modifier,
     viewModel: CardScrollerViewModel? = null
 ) {
@@ -40,13 +42,23 @@ fun CardScrollerScreen(
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
             .pointerInput(Unit) {
-                detectVerticalDragGestures(
-                    onVerticalDrag = { change, dragAmount ->
-                        dragOffset.value = Offset(0f, dragOffset.value.y + dragAmount)
+                detectDragGestures(
+                    onDrag = { change, dragAmount ->
+                        change.consume()
+                        dragOffset.value = Offset(
+                            dragOffset.value.x + dragAmount.x,
+                            dragOffset.value.y + dragAmount.y
+                        )
                     },
                     onDragEnd = {
                         val threshold = 100f
-                        if (dragOffset.value.y > threshold) {
+                        if (kotlin.math.abs(dragOffset.value.x) > kotlin.math.abs(dragOffset.value.y)) {
+                            if (dragOffset.value.x > threshold) {
+                                viewModel?.moveToPreviousInterest()
+                            } else if (dragOffset.value.x < -threshold) {
+                                viewModel?.moveToNextInterest()
+                            }
+                        } else if (dragOffset.value.y > threshold) {
                             viewModel?.moveBackward()
                         } else if (dragOffset.value.y < -threshold) {
                             viewModel?.moveForward()
@@ -64,8 +76,28 @@ fun CardScrollerScreen(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
+            Text(
+                text = interestSequence.activeInterest?.title ?: "No interests",
+                style = MaterialTheme.typography.titleLarge,
+                color = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+            Text(
+                text = interestSequence.activeInterest?.cards?.let { sequence ->
+                    val position = if (sequence.cards.isEmpty()) {
+                        "No cards"
+                    } else {
+                        "Card ${sequence.focusedIndex + 1} of ${sequence.cards.size}"
+                    }
+                    "$position · ${navigationModeLabel(sequence.navigationMode)}"
+                } ?: "No cards · ${navigationModeLabel(NavigationMode.FINITE)}",
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 8.dp)
+            )
+
             // Previous card (partial)
-            sequence.neighborBefore?.let { card ->
+            interestSequence.activeInterest?.cards?.neighborBefore?.let { card ->
                 CardItem(
                     card = card,
                     isFocused = false,
@@ -78,7 +110,7 @@ fun CardScrollerScreen(
             }
 
             // Focused card
-            sequence.focusedCard?.let { card ->
+            interestSequence.activeInterest?.cards?.focusedCard?.let { card ->
                 CardItem(
                     card = card,
                     isFocused = true,
@@ -91,7 +123,7 @@ fun CardScrollerScreen(
             }
 
             // Next card (partial)
-            sequence.neighborAfter?.let { card ->
+            interestSequence.activeInterest?.cards?.neighborAfter?.let { card ->
                 CardItem(
                     card = card,
                     isFocused = false,
@@ -117,6 +149,19 @@ fun CardScrollerScreen(
                 Spacer(modifier = Modifier.width(16.dp))
                 Button(onClick = { viewModel?.moveForward() }) {
                     Text("Next →")
+                }
+            }
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.Center
+            ) {
+                Button(onClick = { viewModel?.moveToPreviousInterest() }) {
+                    Text("← Interest")
+                }
+                Spacer(modifier = Modifier.width(16.dp))
+                Button(onClick = { viewModel?.moveToNextInterest() }) {
+                    Text("Interest →")
                 }
             }
         }
@@ -169,5 +214,10 @@ private fun CardItem(
                 )
             }
         }
+
     }
+}
+
+private fun navigationModeLabel(mode: NavigationMode): String {
+    return mode.name.lowercase().replaceFirstChar { it.uppercase() }
 }

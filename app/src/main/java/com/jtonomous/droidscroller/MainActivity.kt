@@ -25,11 +25,10 @@ private fun DroidScrollerApp(viewModel: CardScrollerViewModel = viewModel()) {
     MaterialTheme {
         Surface {
             CardScrollerScreen(
-                sequence = viewModel.cardSequence.value,
+                interestSequence = viewModel.interestSequence.value,
                 modifier = Modifier,
                 viewModel = viewModel
             )
         }
     }
 }
-

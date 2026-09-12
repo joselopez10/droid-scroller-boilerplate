@@ -2,7 +2,8 @@ package com.jtonomous.droidscroller.model
 
 data class CardSequence(
     val cards: List<Card>,
-    val focusedIndex: Int
+    val focusedIndex: Int,
+    val navigationMode: NavigationMode = NavigationMode.FINITE
 ) {
     val focusedCard: Card?
         get() = if (focusedIndex in cards.indices) cards[focusedIndex] else null
@@ -20,12 +21,24 @@ data class CardSequence(
         }
 
     fun moveForward(): CardSequence {
-        val nextIndex = (focusedIndex + 1).coerceAtMost(cards.size - 1)
+        if (cards.isEmpty()) {
+            return copy(focusedIndex = 0)
+        }
+        val nextIndex = when (navigationMode) {
+            NavigationMode.FINITE -> (focusedIndex + 1).coerceAtMost(cards.lastIndex)
+            NavigationMode.LOOP -> (focusedIndex + 1).mod(cards.size)
+        }
         return copy(focusedIndex = nextIndex)
     }
 
     fun moveBackward(): CardSequence {
-        val prevIndex = (focusedIndex - 1).coerceAtLeast(0)
+        if (cards.isEmpty()) {
+            return copy(focusedIndex = 0)
+        }
+        val prevIndex = when (navigationMode) {
+            NavigationMode.FINITE -> (focusedIndex - 1).coerceAtLeast(0)
+            NavigationMode.LOOP -> (focusedIndex - 1 + cards.size).mod(cards.size)
+        }
         return copy(focusedIndex = prevIndex)
     }
 }

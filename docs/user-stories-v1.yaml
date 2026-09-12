@@ -76,11 +76,86 @@ user_stories:
         - ./gradlew assembleDebug
       device: []
 
+  - id: US-00A
+    title: Implement each increment with TDD (Foundation)
+    category: developer
+    priority: P0
+    status: completed
+    story:
+      as_a: developer
+      i_want: each user-story increment to follow red-green-refactor
+      so_that: behavior is developed in small, reviewable steps
+    acceptance_criteria:
+      - A failing test or reproducible check exists before the implementation change.
+      - The smallest implementation needed to pass is introduced.
+      - Relevant tests are rerun after implementation.
+      - Refactoring preserves green tests.
+      - Each meaningful increment can be reviewed and committed independently.
+    increments:
+      - Select one acceptance criterion.
+      - Add the smallest failing test.
+      - Implement the minimum behavior.
+      - Refactor only after the test is green.
+      - Record automated and device verification separately.
+    verification:
+      automated:
+        - ./gradlew test
+      device: []
+
+  - id: US-00B
+    title: Keep application logic JVM-testable (Foundation)
+    category: developer
+    priority: P0
+    status: completed
+    story:
+      as_a: developer
+      i_want: navigation and card rules to run without the Android runtime
+      so_that: the inner TDD loop remains fast and deterministic
+    acceptance_criteria:
+      - Navigation, insertion, deletion, and mode rules can be tested on the JVM.
+      - Business rules do not unnecessarily depend on Android framework APIs.
+      - Android-specific code is isolated behind clear boundaries.
+      - Fakes or test doubles can exercise persistence and time-dependent behavior.
+    increments:
+      - Separate domain state transitions from UI gesture handling.
+      - Define interfaces for persistence and platform-dependent effects.
+      - Add JVM tests for each state transition.
+    verification:
+      automated:
+        - ./gradlew test
+      device: []
+
+  - id: US-00C
+    title: Verify the project from one command (Foundation)
+    category: developer
+    priority: P0
+    status: completed
+    story:
+      as_a: developer
+      i_want: one command to run the project's automated checks
+      so_that: I can decide whether an increment is ready to review
+    acceptance_criteria:
+      - The command runs unit tests.
+      - The command runs linting when configured.
+      - The command builds the debug application.
+      - The command returns a non-zero exit code on failure.
+      - The command prints enough context to identify the failed stage.
+    increments:
+      - Define the verification command using existing Gradle tasks.
+      - Add or document the command as part of the project workflow.
+      - Exercise both success and failure paths.
+    verification:
+      automated:
+        - ./gradlew test
+        - ./gradlew lint
+        - ./gradlew assembleDebug
+      device: []
+
   - id: US-002
     title: Display a minimal spatial scroller
     category: product
     priority: P0
-    status: ready
+    status: completed
     story:
       as_a: user
       i_want: to see a focused card with neighboring cards partially visible
@@ -105,7 +180,7 @@ user_stories:
     title: Navigate between interests horizontally
     category: product
     priority: P0
-    status: ready
+    status: completed
     story:
       as_a: user
       i_want: to swipe horizontally between interests
@@ -130,7 +205,7 @@ user_stories:
     title: Navigate cards with finite vertical scrolling
     category: product
     priority: P0
-    status: ready
+    status: completed
     story:
       as_a: user
       i_want: vertical navigation to stop at the ends in finite mode
@@ -150,6 +225,35 @@ user_stories:
         - JVM tests cover both boundaries and repeated boundary attempts.
       device:
         - Confirm end-of-sequence behavior is understandable during vertical swipes.
+
+  - id: US-004-MILESTONE
+    title: Device validation checkpoint - Vertical navigation
+    category: developer
+    priority: P1
+    status: completed
+    story:
+      as_a: developer
+      i_want: to validate vertical navigation and card transitions on a physical device
+      so_that: gesture responsiveness and visual feedback are verified before continuing
+    acceptance_criteria:
+      - A debug APK can be built and installed using ADB.
+      - Vertical navigation (forward/backward) works smoothly on device.
+      - Card boundaries and transitions are visually understandable.
+      - Android-specific issues are recorded as follow-up story increments.
+    increments:
+      - Build and install debug APK to physical device.
+      - Exercise vertical navigation (swipes and boundaries).
+      - Verify transition animations are smooth and not glitchy.
+      - Record any visual or gesture defects for resolution.
+    verification:
+      automated:
+        - ./gradlew assembleDebug
+      device:
+        - adb devices
+        - adb install -r app/build/outputs/apk/debug/app-debug.apk
+        - adb shell am start -n com.jtonomous.droidscroller/.MainActivity
+        - Manual swipe testing: forward, backward, and boundary attempts
+        - Confirm animations and visual hierarchy are correct
 
   - id: US-005
     title: Navigate cards with looping vertical scrolling
@@ -251,6 +355,37 @@ user_stories:
       device:
         - Confirm data remains after force-close and relaunch.
 
+  - id: US-008-MILESTONE
+    title: Device validation checkpoint - Full editing workflow
+    category: developer
+    priority: P1
+    status: ready
+    story:
+      as_a: developer
+      i_want: to validate the complete editing and persistence workflow on a physical device
+      so_that: user interactions, data durability, and app lifecycle behavior are verified
+    acceptance_criteria:
+      - A debug APK can be built and installed using ADB.
+      - Full editing workflow (insert, delete, navigate, persist) works on device.
+      - Data survives app restart, force-close, and relaunch.
+      - Android lifecycle integration is correct and data is not lost.
+    increments:
+      - Build and install debug APK to physical device.
+      - Perform a full workflow: navigate, insert cards, delete cards, navigate again.
+      - Force-close the app and verify data is preserved.
+      - Restart the app and confirm the state is restored correctly.
+      - Record any data loss or state corruption issues.
+    verification:
+      automated:
+        - ./gradlew assembleDebug
+      device:
+        - adb devices
+        - adb install -r app/build/outputs/apk/debug/app-debug.apk
+        - adb shell am start -n com.jtonomous.droidscroller/.MainActivity
+        - Manual testing: Insert, delete, navigate, force-close (adb shell am force-stop), relaunch
+        - Verify data integrity and correct state restoration
+        - Check adb logcat for any persistence errors
+
   - id: US-009
     title: Apply responsive spatial presentation
     category: product
@@ -275,108 +410,6 @@ user_stories:
         - UI tests cover configuration or size changes where supported.
       device:
         - Check a small phone and a larger screen during milestone validation.
-
-  - id: US-010
-    title: Implement each increment with TDD
-    category: developer
-    priority: P0
-    status: ready
-    story:
-      as_a: developer
-      i_want: each user-story increment to follow red-green-refactor
-      so_that: behavior is developed in small, reviewable steps
-    acceptance_criteria:
-      - A failing test or reproducible check exists before the implementation change.
-      - The smallest implementation needed to pass is introduced.
-      - Relevant tests are rerun after implementation.
-      - Refactoring preserves green tests.
-      - Each meaningful increment can be reviewed and committed independently.
-    increments:
-      - Select one acceptance criterion.
-      - Add the smallest failing test.
-      - Implement the minimum behavior.
-      - Refactor only after the test is green.
-      - Record automated and device verification separately.
-    verification:
-      automated:
-        - ./gradlew test
-      device: []
-
-  - id: US-011
-    title: Keep application logic JVM-testable
-    category: developer
-    priority: P0
-    status: ready
-    story:
-      as_a: developer
-      i_want: navigation and card rules to run without the Android runtime
-      so_that: the inner TDD loop remains fast and deterministic
-    acceptance_criteria:
-      - Navigation, insertion, deletion, and mode rules can be tested on the JVM.
-      - Business rules do not unnecessarily depend on Android framework APIs.
-      - Android-specific code is isolated behind clear boundaries.
-      - Fakes or test doubles can exercise persistence and time-dependent behavior.
-    increments:
-      - Separate domain state transitions from UI gesture handling.
-      - Define interfaces for persistence and platform-dependent effects.
-      - Add JVM tests for each state transition.
-    verification:
-      automated:
-        - ./gradlew test
-      device: []
-
-  - id: US-012
-    title: Verify the project from one command
-    category: developer
-    priority: P0
-    status: ready
-    story:
-      as_a: developer
-      i_want: one command to run the project's automated checks
-      so_that: I can decide whether an increment is ready to review
-    acceptance_criteria:
-      - The command runs unit tests.
-      - The command runs linting when configured.
-      - The command builds the debug application.
-      - The command returns a non-zero exit code on failure.
-      - The command prints enough context to identify the failed stage.
-    increments:
-      - Define the verification command using existing Gradle tasks.
-      - Add or document the command as part of the project workflow.
-      - Exercise both success and failure paths.
-    verification:
-      automated:
-        - ./gradlew test
-        - ./gradlew lint
-        - ./gradlew assembleDebug
-      device: []
-
-  - id: US-013
-    title: Validate milestones on a physical Android device
-    category: developer
-    priority: P1
-    status: ready
-    story:
-      as_a: developer
-      i_want: to validate accumulated increments on a physical device
-      so_that: runtime, gesture, visual, and performance issues are not hidden by JVM tests
-    acceptance_criteria:
-      - A debug APK can be built and installed using ADB.
-      - Important user interactions can be exercised manually.
-      - Android-specific issues are recorded as new increments or resolved before completion.
-      - Device validation does not block the normal JVM TDD loop.
-    increments:
-      - Document device detection, install, launch, and log commands.
-      - Define milestone flows for horizontal and vertical navigation.
-      - Record visual or gesture defects as follow-up story increments.
-    verification:
-      automated:
-        - ./gradlew assembleDebug
-      device:
-        - adb devices
-        - adb install <apk>
-        - adb shell am start <activity>
-        - adb logcat
 
   - id: US-014
     title: Provide a development-only state harness

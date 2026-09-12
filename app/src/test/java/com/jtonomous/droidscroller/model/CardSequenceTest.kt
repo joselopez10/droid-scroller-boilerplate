@@ -11,6 +11,16 @@ class CardSequenceTest {
     }
 
     @Test
+    fun emptySequenceKeepsValidFocusedIndexAtBothBoundaries() {
+        val sequence = CardSequence(emptyList(), 0)
+
+        assertEquals(0, sequence.moveForward().focusedIndex)
+        assertEquals(0, sequence.moveBackward().focusedIndex)
+        assertNull(sequence.moveForward().focusedCard)
+        assertNull(sequence.moveBackward().focusedCard)
+    }
+
+    @Test
     fun focusedCardReturnsCurrentCard() {
         val cards = listOf(
             Card("1", "Card 1"),
@@ -119,6 +129,20 @@ class CardSequenceTest {
     }
 
     @Test
+    fun repeatedForwardMovesStayAtLastCardInFiniteMode() {
+        val cards = listOf(
+            Card("1", "Card 1"),
+            Card("2", "Card 2")
+        )
+        val sequence = CardSequence(cards, focusedIndex = 0)
+
+        val moved = sequence.moveForward().moveForward().moveForward()
+
+        assertEquals(1, moved.focusedIndex)
+        assertEquals("2", moved.focusedCard?.id)
+    }
+
+    @Test
     fun moveBackwardFromFirstCardStaysAtFirst() {
         val cards = listOf(
             Card("1", "Card 1"),
@@ -128,6 +152,28 @@ class CardSequenceTest {
         val moved = sequence.moveBackward()
         assertEquals(0, moved.focusedIndex)
         assertEquals("1", moved.focusedCard?.id)
+    }
+
+    @Test
+    fun repeatedBackwardMovesStayAtFirstCardInFiniteMode() {
+        val cards = listOf(
+            Card("1", "Card 1"),
+            Card("2", "Card 2")
+        )
+        val sequence = CardSequence(cards, focusedIndex = 1)
+
+        val moved = sequence.moveBackward().moveBackward().moveBackward()
+
+        assertEquals(0, moved.focusedIndex)
+        assertEquals("1", moved.focusedCard?.id)
+    }
+
+    @Test
+    fun finiteModeIsTheDefaultNavigationMode() {
+        assertEquals(
+            NavigationMode.FINITE,
+            CardSequence(cards = listOf(Card("1", "Card 1")), focusedIndex = 0).navigationMode
+        )
     }
 
     @Test
