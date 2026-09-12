@@ -255,6 +255,37 @@ user_stories:
         - Manual swipe testing: forward, backward, and boundary attempts
         - Confirm animations and visual hierarchy are correct
 
+  - id: US-004-USER-FEEDBACK
+    title: Refine seeded content and vertical card controls from device feedback
+    category: product
+    priority: P0
+    status: completed
+    story:
+      as_a: user
+      i_want: the initial interests, card focus, and controls to match the spatial browsing model
+      so_that: the first screen communicates both horizontal interests and vertical cards clearly
+    acceptance_criteria:
+      - The default interests are ordered Board games, Running, Photography.
+      - The default cards are Texas Hold'em, Blackjack, Exploding Kittens; Park, Trail, Marathon; and City, National Park, Gallery.
+      - The app starts on Running, the middle interest.
+      - Each default interest starts on its second card.
+      - The initial card stack exposes the first, focused, and third cards when available.
+      - The card controls use vertical-navigation labels: `Previous card` and `Next card`.
+      - `Next card` is the absolute top control.
+      - `Previous card` remains below the card stack.
+      - Interest controls remain at the bottom.
+    increments:
+      - Replace the development seed interests and cards.
+      - Initialize the middle interest and second-card focus.
+      - Rename and reposition the card controls without changing swipe behavior.
+      - Add focused JVM/UI coverage for the refined initial state and controls.
+    verification:
+      automated:
+        - JVM tests cover default interest order, initial active index, and per-interest focused index.
+        - UI tests cover the control labels and placement.
+      device:
+        - Confirm the refined launch state and control placement on a physical device.
+
   - id: US-005
     title: Navigate cards with looping vertical scrolling
     category: product

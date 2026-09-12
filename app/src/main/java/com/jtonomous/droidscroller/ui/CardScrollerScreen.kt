@@ -71,11 +71,19 @@ fun CardScrollerScreen(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .offset(y = (animatedOffset.value.y / 50).dp),
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Center
+            verticalArrangement = Arrangement.Top
         ) {
+            Button(
+                onClick = { viewModel?.moveForward() },
+                modifier = Modifier.padding(top = 8.dp)
+            ) {
+                Text("Next card")
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
             Text(
                 text = interestSequence.activeInterest?.title ?: "No interests",
                 style = MaterialTheme.typography.titleLarge,
@@ -135,22 +143,22 @@ fun CardScrollerScreen(
                 )
             }
 
-            Spacer(modifier = Modifier.height(16.dp))
+            Spacer(
+                modifier = Modifier
+                    .height(16.dp)
+                    .offset(y = (animatedOffset.value.y / 50).dp)
+            )
 
-            // Control buttons for testing
             Row(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.Center,
-                verticalAlignment = Alignment.CenterVertically
+                horizontalArrangement = Arrangement.Center
             ) {
                 Button(onClick = { viewModel?.moveBackward() }) {
-                    Text("← Previous")
-                }
-                Spacer(modifier = Modifier.width(16.dp))
-                Button(onClick = { viewModel?.moveForward() }) {
-                    Text("Next →")
+                    Text("Previous card")
                 }
             }
+
+            Spacer(modifier = Modifier.weight(1f))
 
             Row(
                 modifier = Modifier.fillMaxWidth(),
