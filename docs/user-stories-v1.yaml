@@ -485,6 +485,72 @@ user_stories:
       device:
         - Check a small phone and a larger screen during milestone validation.
 
+  - id: US-009-REFINE
+    title: Define fixed pager structure for interests and cards
+    category: product
+    priority: P1
+    status: completed
+    story:
+      as_a: user
+      i_want: the interests and cards to use clear horizontal and vertical pager structures
+      so_that: navigation and the focused card position remain predictable
+    acceptance_criteria:
+      - The main product surface is an interests screen distinct from the settings screen.
+      - The interests screen contains a compact top menu and a horizontal pager of interests.
+      - The top menu has a centered plus action for adding a card and a settings action at the right.
+      - Swiping left or right changes the active interest page.
+      - Each interest page contains a vertical pager for its cards.
+      - The vertical pager defines five stable presentation slots ordered from top to bottom as A, B, C, D, and E.
+      - Slot C is always the centered, focused, opaque, and visually dominant slot.
+      - Slots B and D are the first neighbors when those cards exist.
+      - Slots A and E are the second neighbors when those cards exist.
+      - The five presentation slots are distinct from the number of cards stored in an interest.
+      - Changing focus repositions the card sequence into the same fixed slot geometry rather than moving the center slot.
+    increments:
+      - Document the interests-screen and settings-screen boundaries.
+      - Define horizontal interest paging and vertical card paging as separate navigation axes.
+      - Define the fixed five-slot geometry and center-focus invariant.
+      - Map card collections of fewer than, equal to, and greater than five items onto the fixed slots.
+    verification:
+      automated:
+        - Story-level tests define active-interest changes independently from focused-card changes.
+        - Presentation tests define fixed slot positions for card collections of 0 through 7 items.
+      device:
+        - Confirm horizontal interest paging and vertical card paging remain distinguishable on a physical device.
+
+  - id: US-009-REFINE-B
+    title: Apply deterministic five-slot card transformations
+    category: product
+    priority: P1
+    status: ready
+    story:
+      as_a: user
+      i_want: each fixed card slot to have consistent responsive size and transparency
+      so_that: the focused card remains visually dominant across supported devices
+    acceptance_criteria:
+      - Slot C has the largest scale and full opacity.
+      - Slots B and D have matching scale and opacity values that are lower than slot C.
+      - Slots A and E have matching scale and opacity values that are lower than slots B and D.
+      - Slot transformations are derived from relative slot position and available layout size rather than hard-coded device dimensions.
+      - Slot transformations are deterministic for a given layout size and slot position.
+      - Missing cards leave their corresponding slots empty without shifting another card into slot C.
+      - When fewer than five cards exist, the focused card remains in slot C and available neighbors retain their relative slots.
+      - When more than five cards exist, only the focused card and its nearest two neighbors on each side occupy the five visible slots.
+      - Restored focus from US-008 is rendered in slot C after process or app restart.
+      - The settings screen is not treated as part of the five-slot card pager geometry.
+    increments:
+      - Define a testable slot-to-scale and slot-to-alpha transformation model.
+      - Cover empty, one-card, three-card, five-card, and larger card collections.
+      - Verify focus preservation and slot mapping after interest changes and persistence restoration.
+      - Validate visual spacing and transparency at representative small and large layouts.
+    verification:
+      automated:
+        - JVM tests cover symmetric transformations for A/B and D/E equivalents.
+        - JVM tests cover fixed center anchoring and missing-slot behavior.
+        - Compose UI tests cover five-slot rendering and interest/settings screen boundaries.
+      device:
+        - Confirm the five-slot composition, center dominance, and progressive transparency on a phone and a larger supported display.
+
   - id: US-014
     title: Provide a development-only state harness
     category: developer

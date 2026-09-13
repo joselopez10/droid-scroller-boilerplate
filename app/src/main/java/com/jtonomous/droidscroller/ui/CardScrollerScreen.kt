@@ -25,6 +25,7 @@ import androidx.compose.ui.unit.dp
 import com.jtonomous.droidscroller.model.Card as CardModel
 import com.jtonomous.droidscroller.model.CardSequence
 import com.jtonomous.droidscroller.model.cardPresentationFor
+import com.jtonomous.droidscroller.model.fixedPagerSlots
 import com.jtonomous.droidscroller.model.InterestSequence
 import com.jtonomous.droidscroller.model.NavigationMode
 import com.jtonomous.droidscroller.model.NavigationSettings
@@ -104,14 +105,26 @@ fun CardScrollerScreen(
                 )
             }
 
-            Button(
-                onClick = {
-                    newCardTitle.value = ""
-                    showAddCardDialog.value = true
-                },
-                modifier = Modifier.padding(top = 8.dp)
+            Box(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                contentAlignment = Alignment.Center
             ) {
-                Text("+")
+                Button(
+                    onClick = {
+                        newCardTitle.value = ""
+                        showAddCardDialog.value = true
+                    }
+                ) {
+                    Text("+")
+                }
+                Button(
+                    onClick = { viewModel?.openSettings() },
+                    modifier = Modifier.align(Alignment.CenterEnd)
+                ) {
+                    Text("⚙")
+                }
             }
 
             if (navigationSettings.showNavigationButtons) {
@@ -145,23 +158,31 @@ fun CardScrollerScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            interestSequence.activeInterest?.cards?.let { sequence ->
-                val firstVisibleIndex = (sequence.focusedIndex - 2).coerceAtLeast(0)
-                val lastVisibleIndex = (sequence.focusedIndex + 2).coerceAtMost(sequence.cards.lastIndex)
-                for (index in firstVisibleIndex..lastVisibleIndex) {
-                    val relativePosition = index - sequence.focusedIndex
+            interestSequence.activeInterest?.cards?.fixedPagerSlots()?.forEach { slot ->
+                    val relativePosition = slot.relativePosition
                     val presentation = cardPresentationFor(relativePosition)
-                    CardItem(
-                        card = sequence.cards[index],
-                        isFocused = relativePosition == 0,
-                        alpha = presentation.alpha,
+                    val height = when (kotlin.math.abs(relativePosition)) {
+                        0 -> 150.dp
+                        1 -> 80.dp
+                        else -> 50.dp
+                    }
+                    Box(
                         modifier = Modifier
                             .fillMaxWidth(if (relativePosition == 0) 0.95f else 0.85f)
-                            .height(if (relativePosition == 0) 200.dp else if (kotlin.math.abs(relativePosition) == 1) 120.dp else 90.dp)
+                            .height(height)
                             .scale(presentation.scale)
-                            .padding(vertical = 4.dp)
-                    )
-                }
+                            .padding(vertical = 4.dp),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        slot.card?.let { card ->
+                            CardItem(
+                                card = card,
+                                isFocused = relativePosition == 0,
+                                alpha = presentation.alpha,
+                                modifier = Modifier.fillMaxSize()
+                            )
+                        }
+                    }
             }
 
             Spacer(
@@ -188,9 +209,6 @@ fun CardScrollerScreen(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Button(onClick = { viewModel?.openSettings() }) {
-                    Text("⚙")
-                }
                 if (navigationSettings.showNavigationButtons) {
                     Row {
                         Button(onClick = { viewModel?.moveToPreviousInterest() }) {
