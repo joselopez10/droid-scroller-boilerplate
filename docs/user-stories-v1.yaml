@@ -322,7 +322,7 @@ user_stories:
     title: Navigate cards with looping vertical scrolling
     category: product
     priority: P0
-    status: ready
+    status: skipped
     story:
       as_a: user
       i_want: vertical navigation to loop in loop mode
@@ -376,7 +376,7 @@ user_stories:
     title: Delete a focused card safely
     category: product
     priority: P0
-    status: in_progress
+    status: completed
     story:
       as_a: user
       i_want: to delete the focused card through an explicit action
@@ -461,7 +461,7 @@ user_stories:
     title: Apply responsive spatial presentation
     category: product
     priority: P1
-    status: in_progress
+    status: completed
     story:
       as_a: user
       i_want: card spacing and transformations to adapt to screen size
@@ -522,7 +522,7 @@ user_stories:
     title: Apply deterministic five-slot card transformations
     category: product
     priority: P1
-    status: in_progress
+    status: completed
     story:
       as_a: user
       i_want: each fixed card slot to have consistent responsive size and transparency
@@ -555,7 +555,7 @@ user_stories:
     title: Restore non-overlapping responsive five-slot presentation
     category: defect
     priority: P1
-    status: in_progress
+    status: completed
     story:
       as_a: user
       i_want: the five card slots to occupy separate bounded vertical regions
@@ -582,7 +582,7 @@ user_stories:
     title: Simplify settings to version information
     category: defect
     priority: P1
-    status: in_progress
+    status: completed
     story:
       as_a: user
       i_want: settings to contain only a version placeholder
@@ -604,6 +604,70 @@ user_stories:
         - Compose UI tests assert the absence of navigation-button controls and presence of Version.
       device:
         - Confirm settings shows only Version and Back on the connected phone.
+
+  - id: US-016
+    title: Animate bounded vertical card paging
+    category: product
+    priority: P1
+    status: in_progress
+    dependencies:
+      - US-009-REFINE
+      - US-009-FIX-A
+      - US-007
+    story:
+      as_a: user
+      i_want: vertical card gestures to animate to the nearest valid page
+      so_that: scrolling feels smooth and settles on one focused card
+    acceptance_criteria:
+      - A vertical drag below the snap threshold returns to the current card without changing focus.
+      - A vertical drag beyond the snap threshold animates to exactly one adjacent card.
+      - Finite boundaries clamp the gesture without invalid focus or endless scrolling.
+      - The focused card remains anchored in slot C after settling.
+      - Empty and single-card sequences settle without changing state.
+      - Animation timing and target selection are deterministic for the same gesture and layout.
+      - Long-press card actions remain distinct from vertical paging.
+      - Configurable physics, free-scrolling, and loop tuning remain outside this story.
+    increments:
+      - Define a pure vertical snap-target calculation from drag distance, viewport size, and sequence bounds.
+      - Animate the five-slot card surface to the selected target, then commit focus.
+      - Add JVM and Compose coverage for threshold, cancellation, boundaries, and center anchoring.
+    verification:
+      automated:
+        - JVM tests cover vertical snap targets and finite boundary clamping.
+        - Compose tests cover a settled one-card transition and cancellation.
+      device:
+        - Confirm vertical swipes settle smoothly on one card at a time on the connected phone.
+
+  - id: US-017
+    title: Animate bounded horizontal interest paging
+    category: product
+    priority: P1
+    status: in_progress
+    dependencies:
+      - US-009-REFINE
+      - US-016
+    story:
+      as_a: user
+      i_want: horizontal gestures to animate to the nearest interest page
+      so_that: moving between interests feels smooth and predictable
+    acceptance_criteria:
+      - A horizontal drag below the snap threshold returns to the current interest without changing the active index.
+      - A horizontal drag beyond the snap threshold animates to exactly one adjacent interest.
+      - Finite interest boundaries clamp the gesture without invalid active indices or endless scrolling.
+      - Changing interests does not alter the focused card state stored for another interest.
+      - The vertical card pager remains independently usable after horizontal settling.
+      - Animation timing and target selection are deterministic for the same gesture and layout.
+      - Configurable physics, free-scrolling, and loop tuning remain outside this story.
+    increments:
+      - Define a pure horizontal snap-target calculation from drag distance, viewport size, and interest bounds.
+      - Animate the interest surface to the selected target, then commit the active interest.
+      - Add JVM and Compose coverage for threshold, cancellation, boundaries, and independent focus state.
+    verification:
+      automated:
+        - JVM tests cover horizontal snap targets and finite boundary clamping.
+        - Compose tests cover an adjacent-interest transition and cancellation.
+      device:
+        - Confirm horizontal swipes settle on one interest page without triggering vertical card movement.
 
   - id: US-014
     title: Provide a development-only state harness

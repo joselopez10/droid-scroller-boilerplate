@@ -5,9 +5,14 @@ import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performTextInput
 import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.swipeLeft
+import androidx.compose.ui.test.swipeUp
 import org.junit.Before
 import org.junit.Rule
 import org.junit.Test
@@ -53,11 +58,9 @@ class CardScrollerScreenTest {
 
     @Test
     fun longPressDeleteCanBeCancelledAndConfirmed() {
-        composeRule.onNodeWithText("Blackjack").performTouchInput {
-            down(center)
-            advanceEventTime(700)
-            up()
-        }
+        composeRule.onNodeWithText("Trail")
+            .performSemanticsAction(SemanticsActions.OnLongClick)
+        composeRule.waitForIdle()
         composeRule.onNodeWithText("Card actions").assertIsDisplayed()
         composeRule.onNodeWithText("Delete").performClick()
         composeRule.onNodeWithText("Delete card?").assertIsDisplayed()
@@ -65,15 +68,33 @@ class CardScrollerScreenTest {
         composeRule.onNodeWithText("Card actions").assertIsDisplayed()
         composeRule.onNodeWithText("Cancel").performClick()
 
-        composeRule.onNodeWithText("Blackjack").performTouchInput {
-            down(center)
-            advanceEventTime(700)
-            up()
-        }
+        composeRule.onNodeWithText("Trail")
+            .performSemanticsAction(SemanticsActions.OnLongClick)
+        composeRule.waitForIdle()
         composeRule.onNodeWithText("Delete").performClick()
         composeRule.onNodeWithText("Yes").performClick()
 
         composeRule.onNodeWithText("Card 1 of 2 · Finite").assertIsDisplayed()
+    }
+
+    @Test
+    fun verticalSwipeSettlesOnOneAdjacentCard() {
+        composeRule.onRoot().performTouchInput {
+            swipeUp()
+        }
+
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Card 3 of 3 · Finite").assertIsDisplayed()
+    }
+
+    @Test
+    fun horizontalSwipeSettlesOnOneAdjacentInterest() {
+        composeRule.onRoot().performTouchInput {
+            swipeLeft()
+        }
+
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Photography").assertIsDisplayed()
     }
 
 }

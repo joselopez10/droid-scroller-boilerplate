@@ -3,8 +3,9 @@ package com.jtonomous.droidscroller.ui
 import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.gestures.detectDragGestures
-import androidx.compose.foundation.gestures.detectTapGestures
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -15,15 +16,23 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.unit.IntOffset
+import androidx.compose.ui.unit.IntSize
 import androidx.compose.ui.unit.dp
+import kotlin.math.roundToInt
 import com.jtonomous.droidscroller.model.Card as CardModel
 import com.jtonomous.droidscroller.model.CardLayoutSize
 import com.jtonomous.droidscroller.model.CardSequence
@@ -32,7 +41,18 @@ import com.jtonomous.droidscroller.model.fixedPagerSlots
 import com.jtonomous.droidscroller.model.InterestSequence
 import com.jtonomous.droidscroller.model.NavigationMode
 import com.jtonomous.droidscroller.model.NavigationSettings
+import com.jtonomous.droidscroller.model.snapPageDelta
 import com.jtonomous.droidscroller.viewmodel.CardScrollerViewModel
+
+private enum class PagerAxis {
+    HORIZONTAL,
+    VERTICAL
+}
+
+private data class PendingPagerNavigation(
+    val axis: PagerAxis,
+    val delta: Int
+)
 
 @Composable
 fun CardScrollerScreen(
@@ -52,6 +72,27 @@ fun CardScrollerScreen(
     val newCardTitle = remember { mutableStateOf("") }
     val showCardActionsDialog = remember { mutableStateOf(false) }
     val showDeleteConfirmationDialog = remember { mutableStateOf(false) }
+    var viewportSize by remember { mutableStateOf(IntSize.Zero) }
+    var pendingNavigation by remember { mutableStateOf<PendingPagerNavigation?>(null) }
+
+    LaunchedEffect(pendingNavigation) {
+        pendingNavigation?.let { navigation ->
+            delay(300)
+            if (navigation.axis == PagerAxis.HORIZONTAL) {
+                if (navigation.delta > 0) {
+                    viewModel?.moveToNextInterest()
+                } else {
+                    viewModel?.moveToPreviousInterest()
+                }
+            } else if (navigation.delta > 0) {
+                viewModel?.moveForward()
+            } else {
+                viewModel?.moveBackward()
+            }
+            dragOffset.value = Offset.Zero
+            pendingNavigation = null
+        }
+    }
 
     if (navigationSettings.isSettingsOpen) {
         NavigationSettingsScreen(
@@ -67,6 +108,7 @@ fun CardScrollerScreen(
         modifier = modifier
             .fillMaxSize()
             .background(MaterialTheme.colorScheme.background)
+            .onSizeChanged { viewportSize = it }
             .pointerInput(Unit) {
                 detectDragGestures(
                     onDrag = { change, dragAmount ->
@@ -77,19 +119,48 @@ fun CardScrollerScreen(
                         )
                     },
                     onDragEnd = {
-                        val threshold = 100f
                         if (kotlin.math.abs(dragOffset.value.x) > kotlin.math.abs(dragOffset.value.y)) {
-                            if (dragOffset.value.x > threshold) {
-                                viewModel?.moveToPreviousInterest()
-                            } else if (dragOffset.value.x < -threshold) {
-                                viewModel?.moveToNextInterest()
+                            val delta = snapPageDelta(
+                                dragDistance = dragOffset.value.x,
+                                pageExtent = viewportSize.width.toFloat(),
+                                currentIndex = interestSequence.activeIndex,
+                                pageCount = interestSequence.interests.size
+                            )
+                            if (delta == 0) {
+                                dragOffset.value = Offset.Zero
+                            } else {
+                                dragOffset.value = Offset(
+                                    x = -delta * viewportSize.width.toFloat(),
+                                    y = 0f
+                                )
+                                pendingNavigation = PendingPagerNavigation(
+                                    axis = PagerAxis.HORIZONTAL,
+                                    delta = delta
+                                )
                             }
-                        } else if (dragOffset.value.y > threshold) {
-                            viewModel?.moveBackward()
-                        } else if (dragOffset.value.y < -threshold) {
-                            viewModel?.moveForward()
+                        } else {
+                            val sequence = interestSequence.activeInterest?.cards
+                            val delta = sequence?.let {
+                                snapPageDelta(
+                                    dragDistance = dragOffset.value.y,
+                                    pageExtent = viewportSize.height.toFloat(),
+                                    currentIndex = it.focusedIndex,
+                                    pageCount = it.cards.size
+                                )
+                            } ?: 0
+                            if (delta == 0) {
+                                dragOffset.value = Offset.Zero
+                            } else {
+                                dragOffset.value = Offset(
+                                    x = 0f,
+                                    y = -delta * viewportSize.height.toFloat()
+                                )
+                                pendingNavigation = PendingPagerNavigation(
+                                    axis = PagerAxis.VERTICAL,
+                                    delta = delta
+                                )
+                            }
                         }
-                        dragOffset.value = Offset.Zero
                     }
                 )
             },
@@ -97,7 +168,13 @@ fun CardScrollerScreen(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize(),
+                .fillMaxSize()
+                .offset {
+                    IntOffset(
+                        animatedOffset.value.x.roundToInt(),
+                        animatedOffset.value.y.roundToInt()
+                    )
+                },
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
@@ -200,7 +277,6 @@ fun CardScrollerScreen(
                 }
             }
 
-            Spacer(modifier = Modifier.height((animatedOffset.value.y / 50).dp))
         }
 
         if (showAddCardDialog.value) {
@@ -325,6 +401,7 @@ private fun NavigationSettingsScreen(
     }
 }
 
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 private fun CardItem(
     card: CardModel,
@@ -334,14 +411,9 @@ private fun CardItem(
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier.then(
-            if (onLongPress == null) {
-                Modifier
-            } else {
-                Modifier.pointerInput(card.id) {
-                    detectTapGestures(onLongPress = { onLongPress() })
-                }
-            }
+        modifier = modifier.combinedClickable(
+            onClick = {},
+            onLongClick = onLongPress
         ),
         colors = CardDefaults.cardColors(
             containerColor = if (isFocused) {
