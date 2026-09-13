@@ -522,7 +522,7 @@ user_stories:
     title: Apply deterministic five-slot card transformations
     category: product
     priority: P1
-    status: ready
+    status: in_progress
     story:
       as_a: user
       i_want: each fixed card slot to have consistent responsive size and transparency
@@ -550,6 +550,60 @@ user_stories:
         - Compose UI tests cover five-slot rendering and interest/settings screen boundaries.
       device:
         - Confirm the five-slot composition, center dominance, and progressive transparency on a phone and a larger supported display.
+
+  - id: US-009-FIX-A
+    title: Restore non-overlapping responsive five-slot presentation
+    category: defect
+    priority: P1
+    status: in_progress
+    story:
+      as_a: user
+      i_want: the five card slots to occupy separate bounded vertical regions
+      so_that: cards remain readable and do not overlap on supported layouts
+    acceptance_criteria:
+      - The five slots are rendered in stable top-to-bottom order A, B, C, D, and E.
+      - Each slot has a bounded layout region and cards do not overlap adjacent slots.
+      - Slot C remains centered and visually dominant.
+      - Empty slots retain their geometry without shifting another card into slot C.
+      - Responsive scale and transparency remain deterministic for the available layout.
+      - The settings screen is excluded from card-slot geometry.
+    increments:
+      - Add a bounded five-row presentation layout.
+      - Add JVM and Compose coverage for fixed slot order and center anchoring.
+      - Validate representative phone and larger layouts without device-specific constants.
+    verification:
+      automated:
+        - JVM tests cover slot mapping and responsive transformations.
+        - Compose UI tests cover five-slot rendering without overlap-prone conditional layout.
+      device:
+        - Confirm cards remain separated and readable on the connected phone.
+
+  - id: US-009-FIX-B
+    title: Simplify settings to version information
+    category: defect
+    priority: P1
+    status: in_progress
+    story:
+      as_a: user
+      i_want: settings to contain only a version placeholder
+      so_that: unsupported navigation-button configuration is not exposed
+    acceptance_criteria:
+      - Navigation-button controls are absent from the interests screen.
+      - Navigation-button controls are absent from the settings screen.
+      - The settings screen displays a Version placeholder.
+      - Opening and closing settings remains available.
+      - Existing persisted state can still be decoded after removing navigation-button support.
+      - New persisted state does not write navigation-button configuration.
+    increments:
+      - Remove navigation-button state, actions, and UI.
+      - Add the Version placeholder to settings.
+      - Update persistence and UI tests.
+    verification:
+      automated:
+        - JVM tests cover settings state and backward-compatible persistence decoding.
+        - Compose UI tests assert the absence of navigation-button controls and presence of Version.
+      device:
+        - Confirm settings shows only Version and Back on the connected phone.
 
   - id: US-014
     title: Provide a development-only state harness

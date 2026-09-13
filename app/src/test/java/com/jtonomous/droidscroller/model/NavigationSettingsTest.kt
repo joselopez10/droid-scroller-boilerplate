@@ -6,11 +6,10 @@ import org.junit.Test
 
 class NavigationSettingsTest {
     @Test
-    fun navigationButtonsAreHiddenByDefault() {
+    fun settingsAreClosedByDefault() {
         val settings = NavigationSettings()
 
         assertFalse(settings.isSettingsOpen)
-        assertFalse(settings.showNavigationButtons)
     }
 
     @Test
@@ -24,14 +23,4 @@ class NavigationSettingsTest {
         assertFalse(closed.isSettingsOpen)
     }
 
-    @Test
-    fun navigationButtonsCanBeToggled() {
-        val settings = NavigationSettings()
-
-        val shown = settings.toggleNavigationButtons()
-        val hidden = shown.toggleNavigationButtons()
-
-        assertTrue(shown.showNavigationButtons)
-        assertFalse(hidden.showNavigationButtons)
-    }
 }

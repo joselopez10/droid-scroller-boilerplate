@@ -40,10 +40,7 @@ class CardScrollerStateStoreTest {
                 ),
                 activeIndex = 0
             ),
-            navigationSettings = NavigationSettings(
-                isSettingsOpen = true,
-                showNavigationButtons = true
-            ),
+            navigationSettings = NavigationSettings(isSettingsOpen = true),
             nextCardId = 42
         )
         val store = InMemoryCardScrollerStateStore()
@@ -51,6 +48,18 @@ class CardScrollerStateStoreTest {
         store.save(CardScrollerStateCodec.decode(CardScrollerStateCodec.encode(original)))
 
         assertEquals(original, store.load())
+    }
+
+    @Test
+    fun legacyNavigationButtonPropertyIsIgnoredWhenDecoding() {
+        val state = PersistedCardScrollerState(
+            interestSequence = InterestSequence(emptyList(), 0),
+            navigationSettings = NavigationSettings(),
+            nextCardId = 1
+        )
+        val legacy = CardScrollerStateCodec.encode(state) + "showNavigationButtons=true\n"
+
+        assertEquals(state, CardScrollerStateCodec.decode(legacy))
     }
 
     @Test

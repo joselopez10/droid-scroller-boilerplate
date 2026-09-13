@@ -36,7 +36,6 @@ object CardScrollerStateCodec {
         properties["activeIndex"] = state.interestSequence.activeIndex.toString()
         properties["interestCount"] = state.interestSequence.interests.size.toString()
         properties["settingsOpen"] = state.navigationSettings.isSettingsOpen.toString()
-        properties["showNavigationButtons"] = state.navigationSettings.showNavigationButtons.toString()
         properties["nextCardId"] = state.nextCardId.toString()
 
         state.interestSequence.interests.forEachIndexed { interestIndex, interest ->
@@ -103,8 +102,7 @@ object CardScrollerStateCodec {
             return PersistedCardScrollerState(
                 interestSequence = InterestSequence(interests, activeIndex),
                 navigationSettings = NavigationSettings(
-                    isSettingsOpen = properties.requiredBoolean("settingsOpen"),
-                    showNavigationButtons = properties.requiredBoolean("showNavigationButtons")
+                    isSettingsOpen = properties.requiredBoolean("settingsOpen")
                 ),
                 nextCardId = nextCardId
             )

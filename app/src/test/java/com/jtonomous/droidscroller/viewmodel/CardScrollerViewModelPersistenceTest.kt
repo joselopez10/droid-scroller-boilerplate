@@ -10,14 +10,13 @@ import org.junit.Test
 
 class CardScrollerViewModelPersistenceTest {
     @Test
-    fun restoredViewModelKeepsActiveInterestFocusedCardAndNavigationSettings() {
+    fun restoredViewModelKeepsActiveInterestFocusedCardAndSettingsState() {
         val store = InMemoryCardScrollerStateStore()
         val firstViewModel = CardScrollerViewModel(store)
 
         firstViewModel.moveToNextInterest()
         firstViewModel.moveForward()
         firstViewModel.openSettings()
-        firstViewModel.toggleNavigationButtons()
 
         val restoredViewModel = CardScrollerViewModel(store)
 
@@ -27,7 +26,6 @@ class CardScrollerViewModelPersistenceTest {
             restoredViewModel.interestSequence.value.activeInterest?.cards?.focusedIndex
         )
         assertEquals(true, restoredViewModel.navigationSettings.value.isSettingsOpen)
-        assertEquals(true, restoredViewModel.navigationSettings.value.showNavigationButtons)
         assertNull(restoredViewModel.persistenceError.value)
     }
 

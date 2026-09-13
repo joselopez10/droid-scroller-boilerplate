@@ -97,11 +97,6 @@ class CardScrollerViewModel(
         persist()
     }
 
-    fun toggleNavigationButtons() {
-        _navigationSettings.value = _navigationSettings.value.toggleNavigationButtons()
-        persist()
-    }
-
     fun persistNow() {
         persist()
     }

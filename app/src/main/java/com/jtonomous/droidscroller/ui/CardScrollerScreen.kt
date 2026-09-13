@@ -20,9 +20,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.unit.dp
 import com.jtonomous.droidscroller.model.Card as CardModel
+import com.jtonomous.droidscroller.model.CardLayoutSize
 import com.jtonomous.droidscroller.model.CardSequence
 import com.jtonomous.droidscroller.model.cardPresentationFor
 import com.jtonomous.droidscroller.model.fixedPagerSlots
@@ -51,7 +53,6 @@ fun CardScrollerScreen(
     if (navigationSettings.isSettingsOpen) {
         NavigationSettingsScreen(
             navigationSettings = navigationSettings,
-            onToggleNavigationButtons = { viewModel?.toggleNavigationButtons() },
             onClose = { viewModel?.closeSettings() },
             persistenceError = persistenceError,
             modifier = modifier
@@ -127,15 +128,6 @@ fun CardScrollerScreen(
                 }
             }
 
-            if (navigationSettings.showNavigationButtons) {
-                Button(
-                    onClick = { viewModel?.moveBackward() },
-                    modifier = Modifier.padding(top = 8.dp)
-                ) {
-                    Text("Next card")
-                }
-            }
-
             Spacer(modifier = Modifier.height(8.dp))
 
             Text(
@@ -158,69 +150,49 @@ fun CardScrollerScreen(
                 modifier = Modifier.padding(bottom = 8.dp)
             )
 
-            interestSequence.activeInterest?.cards?.fixedPagerSlots()?.forEach { slot ->
-                    val relativePosition = slot.relativePosition
-                    val presentation = cardPresentationFor(relativePosition)
-                    val height = when (kotlin.math.abs(relativePosition)) {
-                        0 -> 150.dp
-                        1 -> 80.dp
-                        else -> 50.dp
-                    }
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth(if (relativePosition == 0) 0.95f else 0.85f)
-                            .height(height)
-                            .scale(presentation.scale)
-                            .padding(vertical = 4.dp),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        slot.card?.let { card ->
-                            CardItem(
-                                card = card,
-                                isFocused = relativePosition == 0,
-                                alpha = presentation.alpha,
-                                modifier = Modifier.fillMaxSize()
-                            )
-                        }
-                    }
-            }
-
-            Spacer(
+            BoxWithConstraints(
                 modifier = Modifier
-                    .height(16.dp)
-                    .offset(y = (animatedOffset.value.y / 50).dp)
-            )
-
-            if (navigationSettings.showNavigationButtons) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.Center
-                ) {
-                    Button(onClick = { viewModel?.moveForward() }) {
-                        Text("Previous card")
-                    }
-                }
-            }
-
-            Spacer(modifier = Modifier.weight(1f))
-
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .fillMaxWidth()
+                    .weight(1f)
             ) {
-                if (navigationSettings.showNavigationButtons) {
-                    Row {
-                        Button(onClick = { viewModel?.moveToPreviousInterest() }) {
-                            Text("← Interest")
-                        }
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Button(onClick = { viewModel?.moveToNextInterest() }) {
-                            Text("Interest →")
+                val layoutSize = CardLayoutSize(
+                    width = maxWidth.value,
+                    height = maxHeight.value
+                )
+
+                Column(
+                    modifier = Modifier.fillMaxSize(),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    interestSequence.activeInterest?.cards?.fixedPagerSlots()?.forEach { slot ->
+                        val relativePosition = slot.relativePosition
+                        val presentation = cardPresentationFor(relativePosition, layoutSize)
+                        val slotModifier = Modifier
+                            .fillMaxWidth()
+                            .weight(1f)
+
+                        Box(
+                            modifier = slotModifier,
+                            contentAlignment = Alignment.Center
+                        ) {
+                            slot.card?.let { card ->
+                                CardItem(
+                                    card = card,
+                                    isFocused = relativePosition == 0,
+                                    alpha = presentation.alpha,
+                                    modifier = Modifier
+                                        .fillMaxWidth(if (relativePosition == 0) 0.95f else 0.85f)
+                                        .fillMaxHeight()
+                                        .scale(presentation.scale)
+                                        .alpha(presentation.alpha)
+                                )
+                            }
                         }
                     }
                 }
             }
+
+            Spacer(modifier = Modifier.height((animatedOffset.value.y / 50).dp))
         }
 
         if (showAddCardDialog.value) {
@@ -259,7 +231,6 @@ fun CardScrollerScreen(
 @Composable
 private fun NavigationSettingsScreen(
     navigationSettings: NavigationSettings,
-    onToggleNavigationButtons: () -> Unit,
     onClose: () -> Unit,
     persistenceError: String?,
     modifier: Modifier = Modifier
@@ -283,16 +254,8 @@ private fun NavigationSettingsScreen(
                 modifier = Modifier.padding(bottom = 16.dp)
             )
         }
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceBetween
-        ) {
-            Text("Navigation buttons")
-            Button(onClick = onToggleNavigationButtons) {
-                Text(if (navigationSettings.showNavigationButtons) "On" else "Off")
-            }
-        }
+        Text("Version")
+        Text("0.1", color = MaterialTheme.colorScheme.onSurfaceVariant)
         Spacer(modifier = Modifier.height(24.dp))
         Button(onClick = onClose) {
             Text("Back")
@@ -337,12 +300,12 @@ private fun CardItem(
                     } else {
                         MaterialTheme.typography.bodyMedium
                     },
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha)
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = "ID: ${card.id}",
                     style = MaterialTheme.typography.labelSmall,
-                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = alpha * 0.7f)
+                    color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.7f)
                 )
             }
         }

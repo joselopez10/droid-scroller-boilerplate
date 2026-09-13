@@ -22,7 +22,7 @@ class CardScrollerScreenTest {
     }
 
     @Test
-    fun navigationButtonsAreHiddenByDefault() {
+    fun interestsScreenHasNoNavigationButtonControls() {
         composeRule.onNodeWithText("⚙").assertIsDisplayed()
         composeRule.onAllNodesWithText("Next card").assertCountEquals(0)
         composeRule.onAllNodesWithText("Previous card").assertCountEquals(0)
@@ -31,29 +31,12 @@ class CardScrollerScreenTest {
     }
 
     @Test
-    fun settingsCanShowAndHideNavigationButtons() {
+    fun settingsShowsVersionAndNoNavigationButtonControls() {
         composeRule.onNodeWithText("⚙").performClick()
-        composeRule.onNodeWithText("Navigation buttons").assertIsDisplayed()
-        composeRule.onNodeWithText("Off").performClick()
-        composeRule.onNodeWithText("On").assertIsDisplayed()
+        composeRule.onNodeWithText("Version").assertIsDisplayed()
+        composeRule.onNodeWithText("0.1").assertIsDisplayed()
+        composeRule.onAllNodesWithText("Navigation buttons").assertCountEquals(0)
         composeRule.onNodeWithText("Back").performClick()
-        composeRule.onNodeWithText("Next card").assertIsDisplayed()
-        composeRule.onNodeWithText("Previous card").assertIsDisplayed()
-        composeRule.onNodeWithText("← Interest").assertIsDisplayed()
-        composeRule.onNodeWithText("Interest →").assertIsDisplayed()
-    }
-
-    @Test
-    fun cardButtonLabelsUseRequestedActions() {
-        composeRule.onNodeWithText("⚙").performClick()
-        composeRule.onNodeWithText("Off").performClick()
-        composeRule.onNodeWithText("Back").performClick()
-
-        composeRule.onNodeWithText("Next card").performClick()
-        composeRule.onNodeWithText("Card 1 of 3 · Finite").assertIsDisplayed()
-
-        composeRule.onNodeWithText("Previous card").performClick()
-        composeRule.onNodeWithText("Card 2 of 3 · Finite").assertIsDisplayed()
     }
 
     @Test
