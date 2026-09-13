@@ -41,4 +41,34 @@ class CardPagerSlotTest {
         assertEquals(5, slots.size)
         assertEquals(5, slots.count { it.card == null })
     }
+
+    @Test
+    fun largerSequenceShowsOnlyNearestTwoNeighborsAroundFocus() {
+        val sequence = CardSequence(
+            cards = (1..7).map { Card("$it", "Card $it") },
+            focusedIndex = 3
+        )
+
+        val slots = sequence.fixedPagerSlots()
+
+        assertEquals(listOf("2", "3", "4", "5", "6"), slots.map { it.card?.id })
+        assertEquals("4", slots[2].card?.id)
+    }
+
+    @Test
+    fun focusRemainsInCenterWhenSequenceHasFewerThanFiveCards() {
+        val sequence = CardSequence(
+            cards = listOf(
+                Card("1", "Card 1"),
+                Card("2", "Card 2"),
+                Card("3", "Card 3")
+            ),
+            focusedIndex = 1
+        )
+
+        val slots = sequence.fixedPagerSlots()
+
+        assertEquals(listOf(null, "1", "2", "3", null), slots.map { it.card?.id })
+        assertEquals("2", slots[2].card?.id)
+    }
 }
