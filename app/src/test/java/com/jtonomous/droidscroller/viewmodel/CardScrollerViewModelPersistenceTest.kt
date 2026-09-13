@@ -44,6 +44,18 @@ class CardScrollerViewModelPersistenceTest {
     }
 
     @Test
+    fun deletingFocusedCardPersistsTheUpdatedSequence() {
+        val store = InMemoryCardScrollerStateStore()
+        val viewModel = CardScrollerViewModel(store)
+
+        viewModel.deleteFocusedCard()
+        val restoredViewModel = CardScrollerViewModel(store)
+
+        assertEquals(2, restoredViewModel.cardSequence?.cards?.size)
+        assertEquals(1, restoredViewModel.cardSequence?.focusedIndex)
+    }
+
+    @Test
     fun persistenceFailuresAreExposedToThePresentationLayer() {
         val viewModel = CardScrollerViewModel(
             object : CardScrollerStateStore {

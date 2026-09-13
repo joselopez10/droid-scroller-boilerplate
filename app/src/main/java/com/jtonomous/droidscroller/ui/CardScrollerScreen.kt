@@ -4,6 +4,7 @@ import androidx.compose.animation.core.animateOffsetAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.detectDragGestures
+import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
 import androidx.compose.material3.Card
@@ -49,6 +50,8 @@ fun CardScrollerScreen(
     )
     val showAddCardDialog = remember { mutableStateOf(false) }
     val newCardTitle = remember { mutableStateOf("") }
+    val showCardActionsDialog = remember { mutableStateOf(false) }
+    val showDeleteConfirmationDialog = remember { mutableStateOf(false) }
 
     if (navigationSettings.isSettingsOpen) {
         NavigationSettingsScreen(
@@ -180,6 +183,11 @@ fun CardScrollerScreen(
                                     card = card,
                                     isFocused = relativePosition == 0,
                                     alpha = presentation.alpha,
+                                    onLongPress = if (relativePosition == 0) {
+                                        { showCardActionsDialog.value = true }
+                                    } else {
+                                        null
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth(if (relativePosition == 0) 0.95f else 0.85f)
                                         .fillMaxHeight()
@@ -221,6 +229,60 @@ fun CardScrollerScreen(
                 dismissButton = {
                     TextButton(onClick = { showAddCardDialog.value = false }) {
                         Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showCardActionsDialog.value) {
+            AlertDialog(
+                onDismissRequest = { showCardActionsDialog.value = false },
+                title = { Text("Card actions") },
+                text = { Text("Choose an action for ${interestSequence.activeInterest?.cards?.focusedCard?.title ?: "this card"}.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            showCardActionsDialog.value = false
+                            showDeleteConfirmationDialog.value = true
+                        }
+                    ) {
+                        Text("Delete")
+                    }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showCardActionsDialog.value = false }) {
+                        Text("Cancel")
+                    }
+                }
+            )
+        }
+
+        if (showDeleteConfirmationDialog.value) {
+            AlertDialog(
+                onDismissRequest = {
+                    showDeleteConfirmationDialog.value = false
+                    showCardActionsDialog.value = true
+                },
+                title = { Text("Delete card?") },
+                text = { Text("This action cannot be undone.") },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            viewModel?.deleteFocusedCard()
+                            showDeleteConfirmationDialog.value = false
+                        }
+                    ) {
+                        Text("Yes")
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = {
+                            showDeleteConfirmationDialog.value = false
+                            showCardActionsDialog.value = true
+                        }
+                    ) {
+                        Text("No")
                     }
                 }
             )
@@ -268,10 +330,19 @@ private fun CardItem(
     card: CardModel,
     isFocused: Boolean,
     alpha: Float,
+    onLongPress: (() -> Unit)? = null,
     modifier: Modifier = Modifier
 ) {
     Card(
-        modifier = modifier,
+        modifier = modifier.then(
+            if (onLongPress == null) {
+                Modifier
+            } else {
+                Modifier.pointerInput(card.id) {
+                    detectTapGestures(onLongPress = { onLongPress() })
+                }
+            }
+        ),
         colors = CardDefaults.cardColors(
             containerColor = if (isFocused) {
                 MaterialTheme.colorScheme.primaryContainer

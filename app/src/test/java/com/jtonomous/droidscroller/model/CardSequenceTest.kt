@@ -211,4 +211,54 @@ class CardSequenceTest {
         assertEquals(0, inserted.focusedIndex)
         assertEquals("new", inserted.focusedCard?.id)
     }
+
+    @Test
+    fun deleteFocusedCardSelectsNextCardWhenDeletingFromMiddle() {
+        val sequence = CardSequence(
+            cards = (1..3).map { Card("$it", "Card $it") },
+            focusedIndex = 1
+        )
+
+        val deleted = sequence.deleteFocused()
+
+        assertEquals(listOf("1", "3"), deleted.cards.map { it.id })
+        assertEquals(1, deleted.focusedIndex)
+        assertEquals("3", deleted.focusedCard?.id)
+    }
+
+    @Test
+    fun deleteFocusedCardSelectsPreviousCardWhenDeletingLastCard() {
+        val sequence = CardSequence(
+            cards = (1..3).map { Card("$it", "Card $it") },
+            focusedIndex = 2
+        )
+
+        val deleted = sequence.deleteFocused()
+
+        assertEquals(listOf("1", "2"), deleted.cards.map { it.id })
+        assertEquals(1, deleted.focusedIndex)
+        assertEquals("2", deleted.focusedCard?.id)
+    }
+
+    @Test
+    fun deleteFocusedOnlyCardLeavesValidEmptySequence() {
+        val deleted = CardSequence(
+            cards = listOf(Card("1", "Only card")),
+            focusedIndex = 0
+        ).deleteFocused()
+
+        assertTrue(deleted.cards.isEmpty())
+        assertEquals(0, deleted.focusedIndex)
+        assertNull(deleted.focusedCard)
+    }
+
+    @Test
+    fun deleteFocusedWithInvalidFocusDoesNothing() {
+        val sequence = CardSequence(
+            cards = listOf(Card("1", "Card 1")),
+            focusedIndex = 4
+        )
+
+        assertEquals(sequence, sequence.deleteFocused())
+    }
 }

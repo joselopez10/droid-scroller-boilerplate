@@ -87,6 +87,19 @@ class CardScrollerViewModel(
         persist()
     }
 
+    fun deleteFocusedCard() {
+        _interestSequence.value = _interestSequence.value.copy(
+            interests = _interestSequence.value.interests.mapIndexed { index, interest ->
+                if (index == _interestSequence.value.activeIndex) {
+                    interest.copy(cards = interest.cards.deleteFocused())
+                } else {
+                    interest
+                }
+            }
+        )
+        persist()
+    }
+
     fun openSettings() {
         _navigationSettings.value = _navigationSettings.value.openSettings()
         persist()

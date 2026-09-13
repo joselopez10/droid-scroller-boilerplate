@@ -27,6 +27,22 @@ data class CardSequence(
         )
     }
 
+    fun deleteFocused(): CardSequence {
+        if (focusedIndex !in cards.indices) {
+            return this
+        }
+
+        val remainingCards = cards.toMutableList().also { it.removeAt(focusedIndex) }
+        return copy(
+            cards = remainingCards,
+            focusedIndex = if (remainingCards.isEmpty()) {
+                0
+            } else {
+                focusedIndex.coerceAtMost(remainingCards.lastIndex)
+            }
+        )
+    }
+
     fun moveForward(): CardSequence {
         if (cards.isEmpty()) {
             return copy(focusedIndex = 0)

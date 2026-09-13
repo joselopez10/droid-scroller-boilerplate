@@ -376,7 +376,7 @@ user_stories:
     title: Delete a focused card safely
     category: product
     priority: P0
-    status: ready
+    status: in_progress
     story:
       as_a: user
       i_want: to delete the focused card through an explicit action
@@ -402,7 +402,7 @@ user_stories:
     title: Persist interests and cards locally
     category: product
     priority: P0
-    status: in_progress
+    status: completed
     story:
       as_a: user
       i_want: my interests and cards to survive app restarts
@@ -430,7 +430,7 @@ user_stories:
     title: Device validation checkpoint - Full editing workflow
     category: developer
     priority: P1
-    status: ready
+    status: completed
     story:
       as_a: developer
       i_want: to validate the complete editing and persistence workflow on a physical device
@@ -609,7 +609,7 @@ user_stories:
     title: Provide a development-only state harness
     category: developer
     priority: P1
-    status: ready
+    status: skipped
     story:
       as_a: developer
       i_want: to generate, reset, and inspect unusual card states in development
