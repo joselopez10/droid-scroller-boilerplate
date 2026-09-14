@@ -615,6 +615,11 @@ user_stories:
     category: product
     priority: P1
     status: completed
+    current_state: >
+      Vertical gestures are finite and bounded: movement is classified on
+      release, valid gestures settle by one adjacent card, and the fixed
+      five-slot deck remains anchored during the gesture. Boundary attempts
+      use edge-only overscroll feedback.
     dependencies:
       - US-009-REFINE
       - US-009-FIX-A
@@ -649,6 +654,10 @@ user_stories:
     category: product
     priority: P1
     status: completed
+    current_state: >
+      Horizontal gestures are finite, bidirectional, and independently
+      bounded. A reduced swipe threshold makes transitions easier to trigger;
+      the incoming interest enters from the direction indicated by the swipe.
     dependencies:
       - US-009-REFINE
       - US-016
@@ -662,6 +671,7 @@ user_stories:
       - Finite interest boundaries clamp the gesture without invalid active indices or endless scrolling.
       - Changing interests does not alter the focused card state stored for another interest.
       - The vertical card pager remains independently usable after horizontal settling.
+      - Swiping repeatedly in either direction remains possible without restarting the app.
       - Animation timing and target selection are deterministic for the same gesture and layout.
       - Configurable physics, free-scrolling, and loop tuning remain outside this story.
     increments:
@@ -680,6 +690,10 @@ user_stories:
     category: defect
     priority: P1
     status: completed
+    current_state: >
+      The card deck is fixed until release. Raw finger movement does not
+      translate the five-slot surface; only a bounded card transition or
+      first/last-card edge cue changes the pager surface.
     dependencies:
       - US-009-REFINE
       - US-009-FIX-A
@@ -695,6 +709,7 @@ user_stories:
       - A cancelled or below-threshold gesture leaves the fixed slot geometry unchanged.
       - Only a first/last-card boundary attempt produces vertical overscroll movement.
       - Horizontal paging remains independent and does not introduce incidental vertical deck movement.
+      - The focused card remains in slot C throughout normal vertical gesture handling.
     increments:
       - Remove live raw drag offsets from the vertical card pager surface.
       - Preserve bounded one-card settling and edge-only feedback.
