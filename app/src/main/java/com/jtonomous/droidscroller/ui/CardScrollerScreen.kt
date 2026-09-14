@@ -1,6 +1,6 @@
 package com.jtonomous.droidscroller.ui
 
-import androidx.compose.animation.core.animateOffsetAsState
+import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.ExperimentalFoundationApi
@@ -20,6 +20,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
@@ -51,7 +52,8 @@ private enum class PagerAxis {
 
 private data class PendingPagerNavigation(
     val axis: PagerAxis,
-    val delta: Int
+    val delta: Int,
+    val edgeFeedback: Boolean = false
 )
 
 @Composable
@@ -63,30 +65,48 @@ fun CardScrollerScreen(
     viewModel: CardScrollerViewModel? = null
 ) {
     val dragOffset = remember { mutableStateOf(Offset.Zero) }
-    val animatedOffset = animateOffsetAsState(
-        targetValue = dragOffset.value,
-        animationSpec = tween(durationMillis = 300),
-        label = "CardScrollOffset"
-    )
+    val pagerOffsetX = remember { Animatable(0f) }
+    val pagerOffsetY = remember { Animatable(0f) }
     val showAddCardDialog = remember { mutableStateOf(false) }
     val newCardTitle = remember { mutableStateOf("") }
     val showCardActionsDialog = remember { mutableStateOf(false) }
     val showDeleteConfirmationDialog = remember { mutableStateOf(false) }
     var viewportSize by remember { mutableStateOf(IntSize.Zero) }
+    var pagerSize by remember { mutableStateOf(IntSize.Zero) }
     var pendingNavigation by remember { mutableStateOf<PendingPagerNavigation?>(null) }
+    val currentInterestSequence by rememberUpdatedState(interestSequence)
 
     LaunchedEffect(pendingNavigation) {
         pendingNavigation?.let { navigation ->
-            delay(300)
-            if (navigation.axis == PagerAxis.HORIZONTAL) {
+            val pageDuration = 180
+            if (navigation.edgeFeedback) {
+                val feedback = if (navigation.axis == PagerAxis.HORIZONTAL) {
+                    Offset(if (navigation.delta > 0) -24f else 24f, 0f)
+                } else {
+                    Offset(0f, if (navigation.delta > 0) -24f else 24f)
+                }
+                if (navigation.axis == PagerAxis.HORIZONTAL) {
+                    pagerOffsetX.animateTo(feedback.x, tween(100))
+                    pagerOffsetX.animateTo(0f, tween(100))
+                } else {
+                    pagerOffsetY.animateTo(feedback.y, tween(100))
+                    pagerOffsetY.animateTo(0f, tween(100))
+                }
+            } else if (navigation.axis == PagerAxis.HORIZONTAL) {
+                val outgoingOffset = -navigation.delta * viewportSize.width.toFloat()
+                pagerOffsetX.animateTo(outgoingOffset, tween(pageDuration))
                 if (navigation.delta > 0) {
                     viewModel?.moveToNextInterest()
                 } else {
                     viewModel?.moveToPreviousInterest()
                 }
+                pagerOffsetX.snapTo(-outgoingOffset)
+                pagerOffsetX.animateTo(0f, tween(pageDuration))
             } else if (navigation.delta > 0) {
+                delay(120)
                 viewModel?.moveForward()
             } else {
+                delay(120)
                 viewModel?.moveBackward()
             }
             dragOffset.value = Offset.Zero
@@ -123,38 +143,52 @@ fun CardScrollerScreen(
                             val delta = snapPageDelta(
                                 dragDistance = dragOffset.value.x,
                                 pageExtent = viewportSize.width.toFloat(),
-                                currentIndex = interestSequence.activeIndex,
-                                pageCount = interestSequence.interests.size
+                                currentIndex = currentInterestSequence.activeIndex,
+                                pageCount = currentInterestSequence.interests.size,
+                                thresholdFraction = 0.2f
                             )
                             if (delta == 0) {
-                                dragOffset.value = Offset.Zero
+                                val attempted = kotlin.math.abs(dragOffset.value.x) >= viewportSize.width * 0.2f
+                                if (attempted) {
+                                    pendingNavigation = PendingPagerNavigation(
+                                        axis = PagerAxis.HORIZONTAL,
+                                        delta = if (dragOffset.value.x < 0f) 1 else -1,
+                                        edgeFeedback = true
+                                    )
+                                } else {
+                                    dragOffset.value = Offset.Zero
+                                }
                             } else {
-                                dragOffset.value = Offset(
-                                    x = -delta * viewportSize.width.toFloat(),
-                                    y = 0f
-                                )
                                 pendingNavigation = PendingPagerNavigation(
                                     axis = PagerAxis.HORIZONTAL,
                                     delta = delta
                                 )
                             }
                         } else {
-                            val sequence = interestSequence.activeInterest?.cards
-                            val delta = sequence?.let {
+                            val sequence = currentInterestSequence.activeInterest?.cards
+                            val cardPageExtent = pagerSize.height.toFloat() / 5f
+                            val delta = sequence?.takeIf { cardPageExtent > 0f }?.let {
                                 snapPageDelta(
                                     dragDistance = dragOffset.value.y,
-                                    pageExtent = viewportSize.height.toFloat(),
+                                    pageExtent = cardPageExtent,
                                     currentIndex = it.focusedIndex,
-                                    pageCount = it.cards.size
+                                    pageCount = it.cards.size,
+                                    thresholdFraction = 0.3f
                                 )
                             } ?: 0
                             if (delta == 0) {
-                                dragOffset.value = Offset.Zero
+                                val attempted = sequence != null &&
+                                    kotlin.math.abs(dragOffset.value.y) >= cardPageExtent * 0.3f
+                                if (attempted) {
+                                    pendingNavigation = PendingPagerNavigation(
+                                        axis = PagerAxis.VERTICAL,
+                                        delta = if (dragOffset.value.y < 0f) 1 else -1,
+                                        edgeFeedback = true
+                                    )
+                                } else {
+                                    dragOffset.value = Offset.Zero
+                                }
                             } else {
-                                dragOffset.value = Offset(
-                                    x = 0f,
-                                    y = -delta * viewportSize.height.toFloat()
-                                )
                                 pendingNavigation = PendingPagerNavigation(
                                     axis = PagerAxis.VERTICAL,
                                     delta = delta
@@ -168,13 +202,7 @@ fun CardScrollerScreen(
     ) {
         Column(
             modifier = Modifier
-                .fillMaxSize()
-                .offset {
-                    IntOffset(
-                        animatedOffset.value.x.roundToInt(),
-                        animatedOffset.value.y.roundToInt()
-                    )
-                },
+                .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Top
         ) {
@@ -234,6 +262,13 @@ fun CardScrollerScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .onSizeChanged { pagerSize = it }
+                    .offset {
+                        IntOffset(
+                                pagerOffsetX.value.roundToInt(),
+                                pagerOffsetY.value.roundToInt()
+                        )
+                    }
             ) {
                 val layoutSize = CardLayoutSize(
                     width = maxWidth.value,

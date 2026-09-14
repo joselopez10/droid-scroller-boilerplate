@@ -3,6 +3,7 @@ package com.jtonomous.droidscroller
 import androidx.compose.ui.test.assertCountEquals
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.test.onAllNodesWithText
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.onRoot
@@ -85,6 +86,19 @@ class CardScrollerScreenTest {
 
         composeRule.waitForIdle()
         composeRule.onNodeWithText("Card 3 of 3 · Finite").assertIsDisplayed()
+    }
+
+    @Test
+    fun shortVerticalDragKeepsTheFocusedCardAnchored() {
+        composeRule.onRoot().performTouchInput {
+            val start = center
+            down(start)
+            moveBy(Offset(0f, -20f), delayMillis = 100)
+            up()
+        }
+
+        composeRule.waitForIdle()
+        composeRule.onNodeWithText("Card 2 of 3 · Finite").assertIsDisplayed()
     }
 
     @Test

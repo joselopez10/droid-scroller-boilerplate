@@ -669,6 +669,37 @@ user_stories:
       device:
         - Confirm horizontal swipes settle on one interest page without triggering vertical card movement.
 
+  - id: US-009-FIX-C
+    title: Preserve fixed card-deck geometry during gestures
+    category: defect
+    priority: P1
+    status: in_progress
+    dependencies:
+      - US-009-REFINE
+      - US-009-FIX-A
+      - US-016
+    story:
+      as_a: user
+      i_want: the five card slots to remain fixed while I drag
+      so_that: the card deck does not move freely and the focused card stays anchored in slot C
+    acceptance_criteria:
+      - Pointer movement is used to classify a vertical gesture without translating the five-slot card deck.
+      - The focused card remains in slot C until a bounded post-release transition commits a new focus.
+      - A successful vertical gesture changes focus by at most one adjacent card.
+      - A cancelled or below-threshold gesture leaves the fixed slot geometry unchanged.
+      - Only a first/last-card boundary attempt produces vertical overscroll movement.
+      - Horizontal paging remains independent and does not introduce incidental vertical deck movement.
+    increments:
+      - Remove live raw drag offsets from the vertical card pager surface.
+      - Preserve bounded one-card settling and edge-only feedback.
+      - Add regression coverage for fixed center anchoring during gesture handling.
+    verification:
+      automated:
+        - JVM tests cover fixed slot mapping and bounded snap targets.
+        - Compose tests cover vertical settling without free-scrolling behavior.
+      device:
+        - Confirm a finger drag does not move the entire card deck before release.
+
   - id: US-014
     title: Provide a development-only state harness
     category: developer
