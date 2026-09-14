@@ -2,7 +2,7 @@
 
 ## Project purpose
 
-This repository is a command-line-first Android foundation for a local-first spatial card scroller. Product behavior is developed as small, independently verifiable increments from `docs/user-stories-v1.yaml`.
+This repository is a command-line-first Android foundation for a local-first spatial card scroller. Product behavior is developed as small, independently verifiable increments from the canonical story file under `docs/` (currently `docs/user-stories-v0.1.yaml`).
 
 Use this repository for the Android implementation itself. Global orchestration, security, permissions, sensitive-data handling, execution gates, and operation-reporting rules are defined by the `j-tonomous` project instructions and policies.
 
@@ -69,7 +69,15 @@ Use JVM tests for deterministic domain and application behavior. Use instrumenta
 
 ## User-story and TDD workflow
 
-Select work from `docs/user-stories-v1.yaml`. Prioritize stories by their declared priority and status, and implement one acceptance criterion or small increment at a time.
+Select work from the canonical story file under `docs/` (currently `docs/user-stories-v0.1.yaml`). Prioritize stories by their declared priority and status, and implement one acceptance criterion or small increment at a time.
+
+Before starting any story or increment:
+
+1. Load all stories marked `status: completed`.
+2. Treat their acceptance criteria, dependencies, and documented current-state notes as regression constraints.
+3. Identify which completed stories are affected by the planned files or behavior.
+4. Preserve those completed behaviors or explicitly record a follow-up defect/story before changing them.
+5. Include focused validation for affected completed stories in the implementation plan.
 
 For each increment:
 
