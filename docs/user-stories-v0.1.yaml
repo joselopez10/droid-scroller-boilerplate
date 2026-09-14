@@ -45,11 +45,12 @@ interaction_model:
     selection: configurable
   hold_actions:
     gesture: press_and_hold
-    initial_threshold_ms: 1500
+    threshold: platform_long_press_default
     behavior:
       - Holding a focused card opens an action surface.
-      - The action surface offers insert and delete actions.
-      - Deleting requires an explicit confirmation or reversible undo.
+      - The action surface offers a delete action.
+      - Adding cards is provided by the main-screen plus action.
+      - Deleting requires an explicit confirmation.
       - Releasing before the threshold does not open the action surface.
 
 user_stories:
@@ -256,7 +257,7 @@ user_stories:
         - Confirm animations and visual hierarchy are correct
 
   - id: US-004-USER-FEEDBACK
-    title: Refine seeded content and vertical card controls from device feedback
+    title: Refine seeded content and initial spatial state from device feedback
     category: product
     priority: P0
     status: completed
@@ -270,27 +271,30 @@ user_stories:
       - The app starts on Running, the middle interest.
       - Each default interest starts on its second card.
       - The initial card stack exposes the first, focused, and third cards when available.
-      - The card controls use vertical-navigation labels: `Previous card` and `Next card`.
-      - `Next card` is the absolute top control.
-      - `Previous card` remains below the card stack.
-      - Interest controls remain at the bottom.
+      - Card navigation uses vertical swipe gestures rather than persistent navigation buttons.
+      - The main screen exposes a plus action for adding cards and a settings action.
     increments:
       - Replace the development seed interests and cards.
       - Initialize the middle interest and second-card focus.
-      - Rename and reposition the card controls without changing swipe behavior.
-      - Add focused JVM/UI coverage for the refined initial state and controls.
+      - Replace persistent card controls with the swipe-based interaction while preserving the seeded state.
+      - Add focused JVM/UI coverage for the refined initial state and actions.
     verification:
       automated:
         - JVM tests cover default interest order, initial active index, and per-interest focused index.
-        - UI tests cover the control labels and placement.
+        - UI tests cover the initial state, plus action, and settings action.
       device:
         - Confirm the refined launch state and control placement on a physical device.
 
   - id: US-004-REFINE-B
-    title: Configure optional navigation buttons from settings
+    title: Configure optional navigation buttons from settings (superseded)
     category: product
     priority: P0
     status: completed
+    superseded_by: US-009-FIX-B
+    current_state: >
+      The historical button configuration was implemented and then removed from
+      the product surface. Current navigation is swipe-only; settings exposes
+      version information and a Back action.
     story:
       as_a: user
       i_want: navigation buttons to be optional and configurable from settings
@@ -299,11 +303,11 @@ user_stories:
       - Swipe navigation remains available regardless of the navigation-button setting.
       - Card and interest navigation buttons are hidden by default.
       - A small settings control is visible near the lower-left area of the main screen.
-      - Settings provides a `Navigation buttons` option.
+      - "Settings provides a `Navigation buttons` option."
       - Enabling the option shows the card and interest navigation buttons.
       - Disabling the option hides the card and interest navigation buttons.
       - The settings surface provides an explicit return action to the main screen.
-      - `Next card` and `Previous card` invoke the requested vertical actions after their callbacks are corrected.
+      - "`Next card` and `Previous card` invoke the requested vertical actions after their callbacks are corrected."
     increments:
       - Add testable settings state for menu visibility and navigation-button visibility.
       - Add the settings control, menu, toggle, and return action.
@@ -382,14 +386,15 @@ user_stories:
       i_want: to delete the focused card through an explicit action
       so_that: I can curate an interest without accidental data loss
     acceptance_criteria:
-      - Pressing and holding a focused card opens card actions after the configured threshold.
-      - Releasing before the threshold does not open card actions.
-      - Delete requires confirmation or provides an immediate undo.
+      - Pressing and holding a focused card opens card actions after the platform long-press threshold.
+      - Releasing before the platform threshold does not open card actions.
+      - The action surface provides Delete; adding cards is handled by the main-screen plus action.
+      - Delete requires confirmation.
       - Deleting the only card leaves a valid empty state.
       - Deleting a card selects a deterministic neighboring focus.
     increments:
       - Model press duration and cancellation.
-      - Add the action surface with insert and delete choices.
+      - Add the action surface with a delete choice.
       - Test delete confirmation/undo and empty-state behavior.
     verification:
       automated:
@@ -609,7 +614,7 @@ user_stories:
     title: Animate bounded vertical card paging
     category: product
     priority: P1
-    status: in_progress
+    status: completed
     dependencies:
       - US-009-REFINE
       - US-009-FIX-A
@@ -620,16 +625,17 @@ user_stories:
       so_that: scrolling feels smooth and settles on one focused card
     acceptance_criteria:
       - A vertical drag below the snap threshold returns to the current card without changing focus.
-      - A vertical drag beyond the snap threshold animates to exactly one adjacent card.
+      - A vertical drag beyond the snap threshold settles on exactly one adjacent card after release.
       - Finite boundaries clamp the gesture without invalid focus or endless scrolling.
       - The focused card remains anchored in slot C after settling.
       - Empty and single-card sequences settle without changing state.
       - Animation timing and target selection are deterministic for the same gesture and layout.
       - Long-press card actions remain distinct from vertical paging.
+      - Normal dragging does not translate the entire five-slot deck; only boundary attempts show edge feedback.
       - Configurable physics, free-scrolling, and loop tuning remain outside this story.
     increments:
       - Define a pure vertical snap-target calculation from drag distance, viewport size, and sequence bounds.
-      - Animate the five-slot card surface to the selected target, then commit focus.
+      - Keep the five-slot card surface fixed during the gesture, then commit the selected target after release.
       - Add JVM and Compose coverage for threshold, cancellation, boundaries, and center anchoring.
     verification:
       automated:
@@ -642,7 +648,7 @@ user_stories:
     title: Animate bounded horizontal interest paging
     category: product
     priority: P1
-    status: in_progress
+    status: completed
     dependencies:
       - US-009-REFINE
       - US-016
@@ -673,7 +679,7 @@ user_stories:
     title: Preserve fixed card-deck geometry during gestures
     category: defect
     priority: P1
-    status: in_progress
+    status: completed
     dependencies:
       - US-009-REFINE
       - US-009-FIX-A
@@ -736,16 +742,17 @@ user_stories:
       so_that: gesture, settings, visibility, and layout regressions are detected before device validation
     acceptance_criteria:
       - Compose UI tests can launch the main screen deterministically.
-      - Tests can identify the settings control, settings option, return action, and navigation controls semantically.
-      - Tests cover default hidden navigation controls.
-      - Tests cover enabling and disabling navigation controls.
-      - Tests cover the corrected card-button action mapping.
+      - Tests can identify the settings control, Version placeholder, and return action semantically.
+      - Tests cover the absence of navigation-button controls.
+      - Tests cover the absence of navigation-button controls.
+      - Tests cover swipe-based vertical and horizontal paging.
+      - Tests cover long-press delete, add-card, and settings boundaries.
       - Tests remain separate from physical-device milestone verification.
     increments:
       - Create the Android Compose test source set and test rule.
-      - Add stable semantics or test tags for settings and navigation controls.
-      - Add focused tests for settings and navigation-button visibility.
-      - Add focused tests for card-button action mapping and initial state.
+      - Add stable semantics or test tags for settings and primary actions.
+      - Add focused tests for settings/version visibility and navigation-button absence.
+      - Add focused tests for swipe paging, deletion, insertion, and initial state.
     verification:
       automated:
         - ./gradlew connectedDebugAndroidTest
